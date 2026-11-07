@@ -98,6 +98,26 @@ tr:last-child td{border-bottom:none}
 .fbox{border:1.5px solid var(--m-b);background:#F4FBFA;border-radius:14px;padding:14px;margin-top:10px}
 .rk{font-weight:800;color:var(--m-d)}
 .empty{text-align:center;color:var(--mut);font-size:12.5px;padding:18px 6px}
+/* input tanggal: jangan pernah melewati kotaknya (Safari/Chrome HP memberi lebar bawaan yang besar) */
+input[type=date]{display:block;width:100%;min-width:0;max-width:100%;-webkit-appearance:none;appearance:none;text-align:left;padding-right:10px}
+input[type=date]::-webkit-date-and-time-value{text-align:left;min-width:0}
+.fbox,.fbox *{min-width:0}
+.fbox{overflow:hidden}
+.dates{display:flex;flex-direction:column;gap:2px}
+/* angka Hasil besar */
+.bigh{font-size:44px;font-weight:800;letter-spacing:-.02em;line-height:1;color:var(--m-d)}
+.bigh.na{color:var(--mut);font-size:30px}
+.hj{font-size:12px;font-weight:700;color:var(--txt2);margin-top:4px}
+.inp.huge{height:68px;font-size:30px;font-weight:800;text-align:center}
+.rbar{height:8px;border-radius:99px;background:var(--bg2);overflow:hidden;margin-top:8px}
+.rbar>i{display:block;height:100%;border-radius:99px;background:var(--m)}
+.rrow .num{font-size:34px;font-weight:800;line-height:1;letter-spacing:-.02em;text-align:right}
+.rrow.top .num{color:var(--m-d)}
+.crl{font-size:12px;color:var(--txt2);margin-top:6px;line-height:1.7}
+.crl b{font-weight:800}
+.heroTop{font-size:12px;color:rgba(255,255,255,.7);font-weight:600}
+.heroName{font-size:26px;font-weight:800;line-height:1.15;margin:4px 0 2px;word-break:break-word}
+.heroNum{font-size:56px;font-weight:800;line-height:1;color:var(--m);letter-spacing:-.02em}
 /* susunan kartu: 1 kolom di HP, menyesuaikan lebar layar di desktop */
 .gridc{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,430px),1fr));gap:14px;align-items:start}
 .gridc.cards{grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr))}
@@ -124,8 +144,8 @@ tr:last-child td{border-bottom:none}
   body.shell .wrap{max-width:none;margin:0;padding:30px 36px 48px}
   .stat b{font-size:34px}.stat span{font-size:12px}
   .toast{bottom:28px}
-  .advgrid{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);grid-template-areas:"tay que" "tay off";grid-template-rows:auto 1fr}
-  .a-que{grid-area:que}.a-tay{grid-area:tay}.a-off{grid-area:off}
+  .advgrid{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);grid-template-areas:"tay que"}
+  .a-que{grid-area:que}.a-tay{grid-area:tay}
 }
 </style>
 </head>
@@ -139,40 +159,28 @@ tr:last-child td{border-bottom:none}
 var APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbx7fvep5uCT_s_RUYbbcv4liCG0jRq5z53kzmz9BaL3QDTw2dI2PfZGo00UHhHnIPu0/exec';
 var PIN='1601';
 var PEOPLE={
-  Lukman:{role:'Advertiser · Admin',creator:true,adv:true,admin:true},
+  Lukman:{role:'Advertiser',creator:true,adv:true},
   Dicky:{role:'Brand Creator',creator:true}
 };
-// "Hasil" mengikuti kolom Hasil di Meta Ads Manager. m = pengali biaya (Meta menampilkan Jangkauan per 1.000 orang)
-var JENIS=[
-  {k:'Percakapan WA',m:1,cfg:'t_wa',u:'per percakapan'},
-  {k:'ThruPlay',m:1,cfg:'t_thruplay',u:'per ThruPlay'},
-  {k:'Klik tautan',m:1,cfg:'t_klik',u:'per klik'},
-  {k:'Jangkauan',m:1000,cfg:'t_jangkauan',u:'per 1.000 orang'}
-];
-var CFG_FIELDS=[['min_spend','Belanja minimum agar creative dinilai (Rp)'],['t_wa','Target biaya per Percakapan WA (Rp)'],['t_thruplay','Target biaya per ThruPlay (Rp)'],['t_klik','Target biaya per Klik tautan (Rp)'],['t_jangkauan','Target biaya per 1.000 Jangkauan (Rp)']];
+// "Hasil" mengikuti kolom Hasil di Meta Ads Manager (jenisnya tergantung objektif kampanye)
+var JENIS=['Percakapan WA','ThruPlay','Klik tautan','Jangkauan'];
 var MONTH_ID=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-var UP_EXT={jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif',mp4:'video/mp4',mov:'video/quicktime',pdf:'application/pdf'};
-var UP_MAX=20*1024*1024;
 
 // ═════════════ UTIL ═════════════
-var S={ok:false,who:'',tab:'dash',loaded:false,err:'',dcat:'all',ccat:'all',cf:null,ed:null};
-var D={config:{},creatives:[],tayang:[],today:''};
+var S={ok:false,who:'',tab:'dash',loaded:false,err:'',kf:'',cf:null,ed:null};
+var D={creatives:[],tayang:[],today:''};
 function $(id){return document.getElementById(id);}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v);}catch(e){return null;}}
-function p2(n){return String(n).padStart(2,'0');}
-function dstr(d){return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());}
+function dstr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function pd(s){var a=s.split('-');return new Date(+a[0],+a[1]-1,+a[2]);}
 function TD(){return D.today||dstr(new Date());}
 function dDiff(a,b){return Math.round((pd(b)-pd(a))/864e5);}
 function dLabel(s){if(!s)return '—';var d=pd(s);return d.getDate()+' '+MONTH_ID[d.getMonth()].slice(0,3)+' '+d.getFullYear();}
 function n0(n){return Math.round(n).toLocaleString('id-ID');}
-function rp(n){return n==null?'—':'Rp '+n0(n);}
-function fSize(n){return n<1048576?Math.max(1,Math.round(n/1024))+' KB':(n/1048576).toFixed(1)+' MB';}
 function uid(p){return p+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
 function toast(msg,bad){var t=document.createElement('div');t.className='toast'+(bad?' bad':'');t.textContent=msg;$('toastbox').appendChild(t);setTimeout(function(){t.remove();},bad?5500:2200);}
 function can(k){return !!(PEOPLE[S.who]&&PEOPLE[S.who][k]);}
-function safeUrl(u){return /^https?:\/\//i.test(u||'')?u:'';}
 function note(t,type){return '<div class="note '+(type||'')+'"><span>'+(type==='warn'?'⚠️':type==='bad'?'❌':type==='ok'?'✅':'ℹ️')+'</span><span>'+t+'</span></div>';}
 
 // ═════════════ API ═════════════
@@ -180,7 +188,7 @@ function apiReady(){return APPS_SCRIPT_URL&&APPS_SCRIPT_URL.indexOf('PASTE_')!==
 function apiLoad(){
   return fetch(APPS_SCRIPT_URL+'?action=load&pin='+encodeURIComponent(PIN)+'&cb='+Date.now()).then(function(r){return r.json();}).then(function(j){
     if(!j.ok)throw new Error(j.error||'Server menolak permintaan');
-    D={config:j.config||{},creatives:j.creatives||[],tayang:j.tayang||[],today:j.today||''};
+    D={creatives:j.creatives||[],tayang:j.tayang||[],today:j.today||''};
   });
 }
 function apiPost(p){
@@ -193,63 +201,39 @@ function saveAndReload(p,okMsg){
 }
 
 // ═════════════ DATA TURUNAN ═════════════
-function cfgNum(k){var v=D.config?D.config[k]:undefined;if(v===undefined||v==='')return null;var n=Number(v);return isNaN(n)?null:n;}
-function minSpend(){var v=cfgNum('min_spend');return v==null?100000:v;}
 function creativeOf(id){return D.creatives.filter(function(c){return c.id===id;})[0]||null;}
 function tayOf(cid){return D.tayang.filter(function(t){return t.cid===cid;}).sort(function(a,b){return a.mulai<b.mulai?1:a.mulai>b.mulai?-1:0;});}
-function isOn(c){return c.medium==='Online';}
 function tStatus(t){var td=TD();if(td<t.mulai)return 'Terjadwal';if(t.selesai&&td>t.selesai)return 'Selesai';return 'Berjalan';}
 function tDays(t){var td=TD();if(td<t.mulai)return 0;var end=t.selesai&&t.selesai<td?t.selesai:td;return dDiff(t.mulai,end)+1;}
-function katLabel(c){return c.kategori==='Penjualan'?'Iklan Penjualan':'Awareness';}
-function jenisInfo(name){var n=String(name||'').trim().toLowerCase();for(var i=0;i<JENIS.length;i++)if(JENIS[i].k.toLowerCase()===n)return JENIS[i];return {k:String(name||'').trim(),m:1,cfg:null,u:'per hasil'};}
-function costOf(spend,hasil,info){return hasil>0?spend/hasil*info.m:null;}
-function verdict(a){
-  if(a.spend<minSpend())return {t:'na',x:'Data masih sedikit'};
-  if(a.hasil===0)return {t:'bad',x:'Belum ada hasil'};
-  var tg=a.info.cfg?cfgNum(a.info.cfg):null;
-  if(tg==null||tg===0)return {t:'na',x:'Belum ada target'};
-  if(a.cost<=tg)return {t:'ok',x:'Sesuai target'};
-  if(a.cost<=tg*1.5)return {t:'warn',x:'Di atas target'};
-  return {t:'bad',x:'Jauh di atas target'};
-}
-// gabungan per creative per jenis hasil (hanya tayang online yang sudah punya hasil)
-function aggs(){
-  var m={};
-  D.tayang.forEach(function(t){
-    if(!t.jenis||t.hasil==null||t.spend==null)return;
-    var c=creativeOf(t.cid);if(!c||!isOn(c))return;
-    var info=jenisInfo(t.jenis),key=t.cid+'|'+info.k.toLowerCase();
-    var a=m[key]||(m[key]={c:c,info:info,spend:0,hasil:0,days:0,n:0});
-    a.spend+=t.spend;a.hasil+=t.hasil;a.days+=tDays(t);a.n++;
-  });
-  return Object.keys(m).map(function(k){var a=m[k];a.cost=costOf(a.spend,a.hasil,a.info);a.v=verdict(a);return a;});
-}
-function offStat(c){var ps=tayOf(c.id),sudah=ps.filter(function(p){return p.pasang==='Sudah';}).length;return {n:ps.length,sudah:sudah};}
+function jenisLabel(name){var n=String(name||'').trim().toLowerCase();for(var i=0;i<JENIS.length;i++)if(JENIS[i].toLowerCase()===n)return JENIS[i];return String(name||'').trim();}
 function crStatus(c){
-  if(isOn(c)){
-    var ts=tayOf(c.id);if(!ts.length)return {t:'na',x:'Belum tayang'};
-    var run=ts.filter(function(t){return tStatus(t)==='Berjalan';}).length;
-    if(run)return {t:'ok',x:'Berjalan'+(ts.length>1?' · '+ts.length+' tayang':'')};
-    if(ts.every(function(t){return tStatus(t)==='Terjadwal';}))return {t:'warn',x:'Terjadwal'};
-    return {t:'brand',x:'Selesai'+(ts.length>1?' · '+ts.length+' tayang':'')};
-  }
-  var o=offStat(c);
-  if(!o.n)return {t:'na',x:'Belum ada penempatan'};
-  if(!o.sudah)return {t:'warn',x:'Belum dipasang'};
-  return {t:o.sudah===o.n?'ok':'brand',x:'Terpasang '+o.sudah+'/'+o.n};
+  var ts=tayOf(c.id);if(!ts.length)return {t:'na',x:'Belum tayang'};
+  if(ts.some(function(t){return tStatus(t)==='Berjalan';}))return {t:'ok',x:'Berjalan'+(ts.length>1?' · '+ts.length+' tayang':'')};
+  if(ts.every(function(t){return tStatus(t)==='Terjadwal';}))return {t:'warn',x:'Terjadwal'};
+  return {t:'brand',x:'Selesai'+(ts.length>1?' · '+ts.length+' tayang':'')};
 }
-function thumb(c){
-  var ico=!c.file?(isOn(c)?'🎨':'🪧'):c.file.mime.indexOf('video')===0?'🎬':c.file.mime==='application/pdf'?'📄':'🖼️';
-  return '<div class="thw"><span>'+ico+'</span>'+(c.file?'<img src="'+esc(c.file.thumb)+'" loading="lazy" alt="" onerror="this.remove()">':'')+'</div>';
+function kampanyeList(){   // kampanye unik, yang terbaru di depan
+  var seen={},out=[];
+  D.creatives.slice().sort(function(a,b){return a.created<b.created?1:-1;}).forEach(function(c){var k=c.kampanye.toLowerCase();if(!seen[k]){seen[k]=1;out.push(c.kampanye);}});
+  return out;
 }
-function tagsOf(c){
-  return '<div class="tags"><span class="tag '+(c.kategori==='Penjualan'?'brand':'na')+'">'+katLabel(c)+'</span><span class="tag na">'+c.medium+'</span></div>';
-}
-function links(c){
-  var h='';
-  if(c.file)h+='<a class="linkb" href="'+esc(c.file.url)+'" target="_blank" rel="noopener">▶ Buka file</a>';
-  if(safeUrl(c.link))h+='<a class="linkb" href="'+esc(c.link)+'" target="_blank" rel="noopener">🔗 Buka link</a>';
-  return h?'<div style="margin-top:6px">'+h+'</div>':'';
+// Peringkat kampanye menurut jumlah Hasil. Jenis hasil berbeda tidak dijumlahkan (ThruPlay ribuan akan menenggelamkan Percakapan WA).
+function rankData(){
+  var groups={};
+  D.tayang.forEach(function(t){
+    if(!t.jenis||t.hasil==null)return;
+    var c=creativeOf(t.cid);if(!c)return;
+    var jl=jenisLabel(t.jenis),jk=jl.toLowerCase(),g=groups[jk]||(groups[jk]={label:jl,camps:{}});
+    var ck=c.kampanye.toLowerCase(),k=g.camps[ck]||(g.camps[ck]={name:c.kampanye,total:0,n:0,cre:{}});
+    k.total+=t.hasil;k.n++;
+    var e=k.cre[c.id]||(k.cre[c.id]={c:c,hasil:0});e.hasil+=t.hasil;
+  });
+  return Object.keys(groups).map(function(jk){
+    var g=groups[jk];
+    g.list=Object.keys(g.camps).map(function(k){var c=g.camps[k];c.creList=Object.keys(c.cre).map(function(i){return c.cre[i];}).sort(function(a,b){return b.hasil-a.hasil||(a.c.nama<b.c.nama?-1:1);});return c;})
+      .sort(function(a,b){return b.total-a.total||(a.name<b.name?-1:1);});
+    return g;
+  }).sort(function(a,b){return b.list.length-a.list.length||(a.label<b.label?-1:1);});
 }
 
 // ═════════════ SHELL ═════════════
@@ -264,8 +248,7 @@ function gate(){
 }
 function tryPin(){var v=$('pin').value;if(v===PIN){S.ok=true;ls('bc_pin_ok','1');start();}else{$('pinerr').textContent='PIN salah.';$('pin').value='';}}
 function pickWho(){
-  document.body.classList.remove('shell');
-  $('top').style.display='none';$('nav').style.display='none';
+  document.body.classList.remove('shell');$('top').style.display='none';$('nav').style.display='none';
   $('view').innerHTML='<div class="gate" style="margin-top:8vh"><div class="logo">BC</div><div class="mid" style="margin-bottom:6px">Siapa Anda?</div>'+
     '<div class="sm mut" style="margin-bottom:20px">Pilihan diingat di HP ini. Ini penanda, bukan verifikasi identitas.</div><div class="pick">'+
     Object.keys(PEOPLE).map(function(n){return '<button onclick="setWho(\''+n+'\')"><b>'+n+'</b><span>'+PEOPLE[n].role+'</span></button>';}).join('')+'</div></div>';
@@ -291,6 +274,7 @@ function nav(){
 }
 function goTab(t){S.tab=t;S.cf=null;S.ed=null;render();window.scrollTo(0,0);}
 function errHint(m){
+  if(/Masih versi lama|masih versi lama/.test(m))return 'Tab di Spreadsheet masih dari versi lama. <b>Hapus tab Creative, Tayang, dan Config</b> di Spreadsheet, lalu tekan Coba lagi (tab baru dibuat otomatis).';
   if(/Unexpected token|JSON|DOCTYPE|<html/i.test(m))return 'Server membalas halaman web, bukan data. Biasanya akses deploy belum <b>Anyone</b>, atau URL belum menunjuk ke versi terbaru. Di Apps Script: Deploy → Manage deployments → Edit → Version: <b>New</b> → Deploy, pastikan "Who has access" = Anyone, lalu pastikan URL yang dipakai berakhiran <b>/exec</b>.';
   if(/Failed to fetch|NetworkError|Load failed|network/i.test(m))return 'App tidak bisa menghubungi Apps Script. Cek koneksi internet. Kalau koneksi normal, biasanya akses deploy belum <b>Anyone</b> atau URL salah (harus berakhiran /exec).';
   if(/tidak terhubung ke Spreadsheet|null|getActiveSpreadsheet|openById|Unexpected sheet|not found|tidak ditemukan/i.test(m))return 'Script tidak bisa membuka Spreadsheet. Pastikan <b>SHEET_ID</b> di bagian atas kode Apps Script berisi ID Spreadsheet yang benar, lalu Deploy → Version: New.';
@@ -302,167 +286,89 @@ function render(){
   nav();
   if(S.err&&!S.loaded){$('view').innerHTML='<div class="card fw"><div class="mid" style="margin-bottom:8px">Gagal memuat data</div><div class="sm" style="margin-bottom:8px;font-weight:700;color:var(--bad)">'+esc(S.err)+'</div><div class="sm mut" style="margin-bottom:6px">'+errHint(String(S.err))+'</div><button class="btn" onclick="start()">Coba lagi</button></div>';return;}
   $('view').innerHTML=S.tab==='cr'?vCreative():S.tab==='adv'?vAdv():vDash();
-  if(S.ed&&S.ed.type==='hasil')hasilLive();
 }
 
-// ═════════════ DASHBOARD ═════════════
-function chipsCat(cur,fn,opts){
-  return '<div class="chips">'+opts.map(function(o){return '<button class="chip '+(cur===o[0]?'on':'')+'" onclick="'+fn+'(\''+o[0]+'\')">'+o[1]+'</button>';}).join('')+'</div>';
-}
-function setDcat(v){S.dcat=v;render();}
-function todoList(){
-  var out=[],td=TD();
-  D.creatives.forEach(function(c){
-    if(isOn(c)){
-      var ts=tayOf(c.id);
-      if(!ts.length){var age=dDiff((c.created||td).slice(0,10),td);if(age>=3)out.push({k:'adv',x:'<b>'+esc(c.nama)+'</b> menunggu diatur tayangnya '+age+' hari.'});}
-      ts.forEach(function(t){
-        var st=tStatus(t);if(st==='Terjadwal')return;
-        if(t.hasil==null)out.push({k:'adv',x:'<b>'+esc(c.nama)+'</b> ('+dLabel(t.mulai)+'): Hasil belum diisi.'});
-        else if(st==='Berjalan'&&t.hasilTs){var a=dDiff(t.hasilTs.slice(0,10),td);if(a>=3)out.push({k:'adv',x:'<b>'+esc(c.nama)+'</b> masih berjalan, Hasil terakhir diperbarui '+a+' hari lalu.'});}
-      });
-    }else{
-      var o=offStat(c);
-      if(!o.sudah)out.push({k:'adv',x:'<b>'+esc(c.nama)+'</b> (offline) belum dipasang/didistribusikan.'});
-    }
-  });
-  return out;
-}
+// ═════════════ DASHBOARD: kampanye dengan Hasil terbesar ═════════════
 function vDash(){
-  var cs=D.creatives,on=cs.filter(isOn),off=cs.filter(function(c){return !isOn(c);});
-  var queue=on.filter(function(c){return !tayOf(c.id).length;}).length;
-  var run=D.tayang.filter(function(t){var c=creativeOf(t.cid);return c&&isOn(c)&&tStatus(t)==='Berjalan';}).length;
-  var pl=0,ps=0;off.forEach(function(c){var o=offStat(c);pl+=o.n;ps+=o.sudah;});
-  var h='<div class="card hero"><div class="h">Ringkasan</div><div class="stats">'+
-    '<div class="stat"><b>'+cs.length+'</b><span>Creative</span></div>'+
-    '<div class="stat"><b>'+queue+'</b><span>Menunggu tayang</span></div>'+
-    '<div class="stat"><b>'+run+'</b><span>Sedang tayang</span></div>'+
-    '<div class="stat"><b>'+ps+'/'+pl+'</b><span>Offline terpasang</span></div></div></div>';
-  var todo=todoList();
+  var rd=rankData(),h='';
+  h+='<div class="card hero"><div class="h">Kampanye dengan Hasil terbesar</div>';
+  if(!rd.length){
+    h+='<div class="heroName">Belum ada Hasil</div><div class="sm mut">Hasil diisi Advertiser di tab Advertiser setelah iklan tayang.</div>';
+  }else{
+    var g0=rd[0],top=g0.list[0];
+    h+='<div class="heroTop">'+esc(g0.label)+'</div><div class="heroName">'+esc(top.name)+'</div><div class="heroNum">'+n0(top.total)+'</div>';
+    if(rd.length>1)h+='<div class="sm" style="margin-top:12px;color:rgba(255,255,255,.75)">'+rd.slice(1).map(function(g){return '<div>'+esc(g.label)+': <b style="color:#fff">'+esc(g.list[0].name)+'</b> · '+n0(g.list[0].total)+'</div>';}).join('')+'</div>';
+  }
+  h+='</div>';
   h+='<div class="gridc">';
-  h+='<div class="card span"><div class="h">Perlu ditindak</div>'+(todo.length?todo.map(function(t){return '<div class="item"><div class="sm">'+t.x+'</div></div>';}).join('')+'<button class="btn s ghost" style="margin-top:10px" onclick="goTab(\'adv\')">Buka tab Advertiser</button>':'<div class="sm mut">✅ Tidak ada yang tertunda.</div>')+'</div>';
-  h+='<div class="span">'+chipsCat(S.dcat,'setDcat',[['all','Semua'],['Penjualan','Iklan Penjualan'],['Awareness','Awareness']])+'</div>';
-  var ag=aggs().filter(function(a){return S.dcat==='all'||a.c.kategori===S.dcat;});
-  var groups={};ag.forEach(function(a){var k=a.info.k.toLowerCase();(groups[k]=groups[k]||{info:a.info,list:[]}).list.push(a);});
-  var keys=Object.keys(groups).sort(function(a,b){return groups[b].list.length-groups[a].list.length;});
-  if(!keys.length)h+='<div class="card span"><div class="h">Penilaian creative</div><div class="empty">Belum ada Hasil yang diisi'+(S.dcat!=='all'?' untuk kategori ini':'')+'. Penilaian muncul setelah Advertiser mengisi Hasil dari Meta.</div></div>';
-  keys.forEach(function(k){
-    var g=groups[k],info=g.info,tg=info.cfg?cfgNum(info.cfg):null,minS=minSpend();
-    var ranked=g.list.filter(function(a){return a.spend>=minS&&a.cost!=null;}).sort(function(a,b){return a.cost-b.cost;});
-    var rest=g.list.filter(function(a){return ranked.indexOf(a)<0;}).sort(function(a,b){return b.spend-a.spend;});
-    var rows=ranked.concat(rest);
-    h+='<div class="card"><div class="h">Biaya '+esc(info.u)+' · '+esc(info.k)+'</div>'+
-      '<div class="sm mut" style="margin-bottom:8px">'+(tg?'Target: <b>'+rp(tg)+'</b> '+esc(info.u)+'. ':'Belum ada target untuk jenis hasil ini (atur di bawah). ')+'Dinilai hanya dengan creative yang jenis hasilnya sama. Dihitung = dibelanjakan ÷ hasil, sama seperti "Biaya per Hasil" di Meta. Dinilai mulai belanja '+rp(minS)+'.</div>'+
-      rows.map(function(a){var i=ranked.indexOf(a);
-        return '<div class="item"><div class="row" style="align-items:flex-start"><div style="flex:1;min-width:0"><div class="kr-t"><span class="rk">'+(i>=0?(i===0&&ranked.length>1?'🏆 ':'#'+(i+1)+' '):'')+'</span>'+esc(a.c.nama)+'</div>'+
-          '<div class="sm mut" style="margin-top:2px">'+katLabel(a.c)+' · '+a.days+' hari · '+a.n+' tayang</div>'+
-          '<div class="sm" style="margin-top:4px">Belanja <b>'+n0(a.spend)+'</b> · Hasil <b>'+n0(a.hasil)+'</b></div></div>'+
-          '<div style="text-align:right;flex-shrink:0"><div class="mid">'+(a.cost==null?'—':n0(a.cost))+'</div><div style="margin-top:4px"><span class="tag '+a.v.t+'">'+a.v.x+'</span></div></div></div></div>';}).join('')+'</div>';
+  rd.forEach(function(g){
+    var max=g.list[0].total||1;
+    h+='<div class="card"><div class="h">Peringkat kampanye · Hasil '+esc(g.label)+'</div>'+g.list.map(function(k,i){
+      var w=k.total>0?Math.max(3,Math.round(k.total/max*100)):0;
+      return '<div class="item rrow'+(i===0?' top':'')+'"><div class="row" style="align-items:flex-start"><div style="flex:1;min-width:0"><div class="kr-t"><span class="rk">'+(i===0&&g.list.length>1?'🏆 ':'#'+(i+1)+' ')+'</span>'+esc(k.name)+'</div>'+
+        '<div class="sm mut" style="margin-top:2px">'+k.creList.length+' creative · '+k.n+' tayang</div></div><div class="num">'+n0(k.total)+'</div></div>'+
+        '<div class="rbar"><i style="width:'+w+'%"></i></div>'+
+        '<div class="crl">'+k.creList.map(function(e){return esc(e.c.nama)+' <b>'+n0(e.hasil)+'</b>';}).join(' · ')+'</div></div>';
+    }).join('')+'</div>';
   });
-  if(off.length){
-    h+='<div class="card"><div class="h">Creative offline</div>'+off.map(function(c){var s=crStatus(c);return '<div class="item"><div class="row"><div class="kr-t">'+esc(c.nama)+'</div><span class="tag '+s.t+' sp">'+s.x+'</span></div></div>';}).join('')+'</div>';
-  }
-  if(can('admin')){
-    h+='<div class="card fw"><div class="h">Target & ambang (admin)</div><div class="sm mut" style="margin-bottom:8px">Kosongkan untuk menghapus target. Angka dalam Rupiah. Contoh dari Blueprint: biaya per Percakapan WA di bawah Rp 15.000 (MOFU) dan Rp 10.000 (BOFU); baseline lama Rp 29.000–30.000.</div>'+
-      CFG_FIELDS.map(function(f){var v=D.config[f[0]];return '<label class="lbl">'+esc(f[1])+'</label><input class="inp" type="number" inputmode="numeric" min="0" step="1" id="cf_'+f[0]+'" value="'+(v==null?(f[0]==='min_spend'?'100000':''):esc(v))+'">';}).join('')+
-      '<button class="btn" id="cf_save" onclick="saveCfg()">Simpan target</button></div>';
-  }
-  return h+'</div>';
-}
-function saveCfg(){
-  var vals={},bad=null;
-  CFG_FIELDS.forEach(function(f){var s=$('cf_'+f[0]).value.trim();if(s!==''&&(isNaN(Number(s))||Number(s)<0))bad=f[1];var old=D.config[f[0]];if(s!==(old==null?'':String(old))&&!(old==null&&f[0]==='min_spend'&&s==='100000'))vals[f[0]]=s;});
-  if(bad){toast('Nilai tidak valid: '+bad,true);return;}
-  if(!Object.keys(vals).length){toast('Tidak ada perubahan');return;}
-  $('cf_save').disabled=true;
-  saveAndReload({action:'config',values:vals},'Target tersimpan').then(function(ok){if(!ok){var e=$('cf_save');if(e)e.disabled=false;}});
+  var withHasil={};rd.forEach(function(g){g.list.forEach(function(k){withHasil[k.name.toLowerCase()]=1;});});
+  var none=kampanyeList().filter(function(k){return !withHasil[k.toLowerCase()];});
+  if(none.length)h+='<div class="card"><div class="h">Kampanye belum ada Hasil</div><div class="sm">'+none.map(esc).join(', ')+'</div></div>';
+  h+='</div>';
+  if(!rd.length&&!D.creatives.length)h+=note('Belum ada creative. Brand Creator mengisi di tab Creative.');
+  return h;
 }
 
 // ═════════════ CREATIVE (Brand Creator) ═════════════
-function setCcat(v){S.ccat=v;render();}
+function setKf(v){S.kf=v;render();}
 function vCreative(){
   var h='<div class="row" style="margin-bottom:12px"><div class="mid">Creative</div>'+(can('creator')&&!S.cf?'<button class="btn s sp" onclick="cfOpen(\'\')">+ Input creative</button>':'')+'</div>';
-  if(!can('creator'))h+=note('Tab ini untuk Brand Creator. Anda bisa melihat, tidak bisa mengubah.');
   if(S.cf)h+=cfForm();
-  h+=chipsCat(S.ccat,'setCcat',[['all','Semua'],['pen','Penjualan'],['awon','Awareness Online'],['awoff','Awareness Offline']]);
-  var list=D.creatives.filter(function(c){return S.ccat==='all'||(S.ccat==='pen'&&c.kategori==='Penjualan')||(S.ccat==='awon'&&c.kategori==='Awareness'&&isOn(c))||(S.ccat==='awoff'&&!isOn(c));})
-    .sort(function(a,b){return a.created<b.created?1:-1;});
-  if(!list.length)return h+'<div class="card"><div class="empty">Belum ada creative'+(S.ccat!=='all'?' di kategori ini':'')+'.</div></div>';
+  var ks=kampanyeList();
+  if(ks.length>1)h+='<div class="chips"><button class="chip '+(!S.kf?'on':'')+'" onclick="setKf(\'\')">Semua kampanye</button>'+ks.map(function(k,i){return '<button class="chip '+(S.kf===k?'on':'')+'" onclick="setKf(KS['+i+'])">'+esc(k)+'</button>';}).join('')+'</div>';
+  KS=ks;
+  var list=D.creatives.filter(function(c){return !S.kf||c.kampanye===S.kf;}).sort(function(a,b){return a.created<b.created?1:-1;});
+  if(!list.length)return h+'<div class="card"><div class="empty">Belum ada creative.</div></div>';
   h+='<div class="gridc cards">'+list.map(function(c){
-    var s=crStatus(c);
-    return '<div class="card"><div class="cr">'+thumb(c)+'<div class="bd"><div class="kr-t">'+esc(c.nama)+'</div>'+tagsOf(c)+
-      '<span class="tag '+s.t+'">'+s.x+'</span><div class="sm mut" style="margin-top:6px">Oleh '+esc(c.by)+' · '+dLabel((c.created||'').slice(0,10))+'</div>'+
-      (c.catatan?'<div class="sm" style="margin-top:4px">'+esc(c.catatan)+'</div>':'')+links(c)+
-      (can('creator')?'<div class="acts"><button class="btn s ghost" onclick="cfOpen(\''+c.id+'\')">Ubah</button><button class="btn s danger" onclick="cfDelete(\''+c.id+'\')">Hapus</button></div>':'')+
-    '</div></div></div>';}).join('')+'</div>';
+    var s=crStatus(c),sum={};
+    tayOf(c.id).forEach(function(t){if(t.jenis&&t.hasil!=null){var j=jenisLabel(t.jenis);sum[j]=(sum[j]||0)+t.hasil;}});
+    var hs=Object.keys(sum).map(function(j){return '<b>'+n0(sum[j])+'</b> '+esc(j);}).join(' · ');
+    return '<div class="card"><div class="kr-t">'+esc(c.nama)+'</div><div class="tags"><span class="tag brand">'+esc(c.kampanye)+'</span><span class="tag '+s.t+'">'+s.x+'</span></div>'+
+      (hs?'<div class="sm">Hasil: '+hs+'</div>':'')+
+      '<div class="sm mut" style="margin-top:4px">Oleh '+esc(c.by)+' · '+dLabel((c.created||'').slice(0,10))+'</div>'+
+      (can('creator')?'<div class="acts"><button class="btn s ghost" onclick="cfOpen(\''+c.id+'\')">Ubah</button><button class="btn s danger" onclick="cfDelete(\''+c.id+'\')">Hapus</button></div>':'')+'</div>';
+  }).join('')+'</div>';
   return h;
 }
+var KS=[];
 function cfOpen(id){
   var c=id?creativeOf(id):null;
-  S.cf=c?{id:c.id,nama:c.nama,kat:c.kategori,med:c.medium,cat:c.catatan,link:c.link,keep:c.file,file:null,drop:false,locked:tayOf(c.id).length>0,origMed:c.medium}
-        :{id:uid('c'),nama:'',kat:'',med:'',cat:'',link:'',keep:null,file:null,drop:false,locked:false};
+  S.cf=c?{id:c.id,nama:c.nama,kamp:c.kampanye}:{id:uid('c'),nama:'',kamp:''};
   render();window.scrollTo(0,0);
 }
-function cfSync(){var f=S.cf;if(!f||!$('cf_nama'))return;f.nama=$('cf_nama').value;f.cat=$('cf_cat').value;f.link=$('cf_link').value;}
-function cfSet(k,v){
-  cfSync();
-  if(k==='kat'){if(v==='Penjualan')S.cf.med='Online';else if(S.cf.kat!=='Awareness')S.cf.med='';}
-  S.cf[k]=v;render();
-}
+function cfSync(){var f=S.cf;if(!f||!$('cf_nama'))return;f.nama=$('cf_nama').value;f.kamp=$('cf_kamp').value;}
+function cfPickK(i){cfSync();S.cf.kamp=KS[i];render();}
 function cfForm(){
-  var f=S.cf,isNew=!creativeOf(f.id);
-  var fileLine=f.file?'<div class="sm" style="margin-top:6px">📎 '+esc(f.file.name)+' · '+fSize(f.file.size)+' · <a href="#" onclick="cfNoFile();return false">batal pilih</a></div>'
-    :(f.keep&&!f.drop?'<div class="sm" style="margin-top:6px">📎 '+esc(f.keep.name)+' · '+fSize(f.keep.size)+' · tersimpan · <a href="#" onclick="cfDrop();return false">hapus file</a></div>':'');
+  var f=S.cf,isNew=!creativeOf(f.id),ks=kampanyeList();KS=ks;
   return '<div class="card fw" style="border-color:var(--m-b)"><div class="h">'+(isNew?'Creative baru':'Ubah creative')+'</div>'+
     '<label class="lbl">Nama file *</label><input class="inp" id="cf_nama" maxlength="120" value="'+esc(f.nama)+'" placeholder="mis. Reels Promo Baja Ringan v2">'+
-    '<label class="lbl">Kategori *</label><div class="chips" style="margin-bottom:0"><button class="chip '+(f.kat==='Penjualan'?'on':'')+'" onclick="cfSet(\'kat\',\'Penjualan\')">Iklan Penjualan</button><button class="chip '+(f.kat==='Awareness'?'on':'')+'" onclick="cfSet(\'kat\',\'Awareness\')">Awareness</button></div>'+
-    (f.kat==='Awareness'?'<label class="lbl">Awareness ini untuk *</label><div class="chips" style="margin-bottom:0"><button class="chip '+(f.med==='Online'?'on':'')+'" '+(f.locked&&f.origMed!=='Online'?'disabled':'')+' onclick="cfSet(\'med\',\'Online\')">Online (diiklankan)</button><button class="chip '+(f.med==='Offline'?'on':'')+'" '+(f.locked&&f.origMed!=='Offline'?'disabled':'')+' onclick="cfSet(\'med\',\'Offline\')">Offline (dipasang)</button></div>'+(f.locked?'<div class="sm mut" style="margin-top:6px">Online/Offline terkunci karena sudah ada tayang/penempatan.</div>':''):'')+
-    (f.kat==='Penjualan'?'<div class="sm mut" style="margin-top:6px">Iklan Penjualan selalu Online.</div>':'')+
-    '<label class="lbl">Upload file (gambar, video MP4/MOV, atau PDF; maks 20 MB)</label>'+
-    '<input type="file" id="cf_file" style="display:none" accept=".jpg,.jpeg,.png,.webp,.gif,.mp4,.mov,.pdf" onchange="cfPick(this)">'+
-    '<button class="btn s ghost" type="button" onclick="$(\'cf_file\').click()">📎 Pilih file</button>'+fileLine+
-    '<label class="lbl">Link (opsional, untuk video lebih dari 20 MB: upload ke Drive lalu tempel link)</label><input class="inp" id="cf_link" value="'+esc(f.link)+'" placeholder="https://…">'+
-    '<label class="lbl">Catatan (opsional)</label><textarea class="ta" id="cf_cat" maxlength="500">'+esc(f.cat)+'</textarea>'+
+    '<label class="lbl">Untuk kampanye apa? *</label><input class="inp" id="cf_kamp" maxlength="80" value="'+esc(f.kamp)+'" placeholder="mis. Promo Akhir Tahun">'+
+    (ks.length?'<div class="sm mut" style="margin:8px 0 6px">Kampanye yang sudah ada (ketuk untuk memakai):</div><div class="chips" style="margin-bottom:0">'+ks.slice(0,10).map(function(k,i){return '<button class="chip '+(f.kamp.toLowerCase()===k.toLowerCase()?'on':'')+'" onclick="cfPickK('+i+')">'+esc(k)+'</button>';}).join('')+'</div>':'')+
     '<button class="btn" id="cf_save" onclick="cfSave()">Simpan creative</button><button class="btn ghost" onclick="S.cf=null;render()">Batal</button></div>';
 }
-function cfPick(inp){
-  var f=inp.files&&inp.files[0];inp.value='';if(!f||!S.cf)return;
-  var m=/\.([a-z0-9]{2,5})$/i.exec(f.name),ext=m?m[1].toLowerCase():'';
-  if(!UP_EXT[ext]){toast('Jenis file tidak didukung (boleh: JPG, PNG, WebP, GIF, MP4, MOV, PDF)',true);return;}
-  if(f.size===0){toast('File kosong',true);return;}
-  if(f.size>UP_MAX){toast('File '+fSize(f.size)+' melebihi 20 MB. Upload ke Drive, lalu tempel linknya di kolom Link.',true);return;}
-  cfSync();S.cf.file={blob:f,name:f.name,size:f.size,done:null};render();
-}
-function cfNoFile(){cfSync();S.cf.file=null;render();}
-function cfDrop(){cfSync();S.cf.drop=true;render();}
-function attRead(blob){return new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(String(r.result).split(',')[1]||'');};r.onerror=function(){rej(new Error('file tidak bisa dibaca'));};r.readAsDataURL(blob);});}
 function cfSave(){
-  cfSync();var f=S.cf,b=$('cf_save');
+  cfSync();var f=S.cf;
   if(!f.nama.trim()){toast('Nama file wajib diisi',true);return;}
-  if(!f.kat){toast('Pilih kategori: Iklan Penjualan atau Awareness',true);return;}
-  if(f.kat==='Awareness'&&!f.med){toast('Pilih Awareness ini untuk Online atau Offline',true);return;}
-  b.disabled=true;
-  var p={action:'creative',id:f.id,nama:f.nama.trim(),kategori:f.kat,medium:f.kat==='Penjualan'?'Online':f.med,catatan:f.cat.trim(),link:f.link.trim()};
-  var pre=Promise.resolve();
-  if(f.file&&!f.file.done){
-    b.textContent='Mengunggah file… jangan tutup app';
-    pre=attRead(f.file.blob).then(function(d){return apiPost({action:'upload',name:f.file.name,data:d});}).then(function(j){f.file.done=j.file;if(j.shared===false)toast('File terunggah, tapi Drive menolak membagikan link. Advertiser mungkin tidak bisa membukanya.',true);});
-  }
-  pre.then(function(){
-    b.textContent='Menyimpan…';
-    if(f.file)p.file=f.file.done;else if(f.drop)p.file=null;
-    return saveAndReload(p,'Creative tersimpan');
-  },function(e){
-    var m=String(e&&e.message||e);
-    toast(/tidak dikenal/.test(m)?'Server belum diperbarui: deploy ulang Apps Script terbaru.':'Gagal mengunggah file: '+m+'. Creative BELUM tersimpan, isian aman.',true);return false;
-  }).then(function(ok){
+  if(!f.kamp.trim()){toast('Isi untuk kampanye apa',true);return;}
+  $('cf_save').disabled=true;
+  saveAndReload({action:'creative',id:f.id,nama:f.nama.trim(),kampanye:f.kamp.trim()},'Creative tersimpan').then(function(ok){
     if(ok){S.cf=null;render();return;}
-    var e=$('cf_save');if(e){e.disabled=false;e.textContent='Simpan creative';}
+    var e=$('cf_save');if(e)e.disabled=false;
   });
 }
 function cfDelete(id){
   var c=creativeOf(id);if(!c)return;
-  if(!confirm('Hapus creative "'+c.nama+'"? Tidak bisa dihapus kalau masih ada tayang/penempatan.'))return;
+  if(!confirm('Hapus creative "'+c.nama+'"? Tidak bisa dihapus kalau masih ada tayang.'))return;
   saveAndReload({action:'creativeDelete',id:id},'Creative dihapus');
 }
 
@@ -476,60 +382,39 @@ function edSync(){
   if($('ed_jenis'))e.jenis=$('ed_jenis').value;
   if($('ed_jx'))e.jx=$('ed_jx').value;
   if($('ed_hasil'))e.hasil=$('ed_hasil').value;
-  if($('ed_spend'))e.spend=$('ed_spend').value;
-  if($('ed_lokasi'))e.lokasi=$('ed_lokasi').value;
-  if($('ed_cat'))e.catatan=$('ed_cat').value;
 }
+function newTayang(cid){edOpen({type:'tayang',cid:cid,id:'',mulai:TD(),selesai:''});}
 function vAdv(){
   var h='<div class="mid" style="margin-bottom:12px">Advertiser</div>';
-  if(!can('adv'))h+=note('Tab ini untuk Advertiser. Anda bisa melihat, tidak bisa mengubah.');
-  var on=D.creatives.filter(isOn),off=D.creatives.filter(function(c){return !isOn(c);});
-  var queue=on.filter(function(c){return !tayOf(c.id).length;}).sort(function(a,b){return a.created<b.created?-1:1;});
-  var live=on.filter(function(c){return tayOf(c.id).length;}).sort(function(a,b){return tayOf(b.id)[0].mulai<tayOf(a.id)[0].mulai?-1:1;});
+  if(!can('adv'))h+=note('Tab ini untuk Advertiser (Lukman). Anda bisa melihat, tidak bisa mengubah.');
+  var queue=D.creatives.filter(function(c){return !tayOf(c.id).length;}).sort(function(a,b){return a.created<b.created?-1:1;});
+  var live=D.creatives.filter(function(c){return tayOf(c.id).length;}).sort(function(a,b){return tayOf(b.id)[0].mulai<tayOf(a.id)[0].mulai?-1:1;});
   h+='<div class="advgrid">';
   h+='<div class="card a-que"><div class="h">Antrean · belum tayang ('+queue.length+')</div>';
-  if(!queue.length)h+='<div class="empty">Tidak ada antrean. Semua creative online sudah punya jadwal tayang.</div>';
+  if(!queue.length)h+='<div class="empty">Tidak ada antrean. Semua creative sudah punya jadwal tayang.</div>';
   queue.forEach(function(c){
     var age=dDiff((c.created||TD()).slice(0,10),TD());
-    h+='<div class="item"><div class="cr">'+thumb(c)+'<div class="bd"><div class="kr-t">'+esc(c.nama)+'</div>'+tagsOf(c)+'<div class="sm mut">Masuk '+(age<=0?'hari ini':age+' hari lalu')+' · oleh '+esc(c.by)+'</div>'+links(c)+
-      (can('adv')?'<div class="acts"><button class="btn s" onclick="edOpen({type:\'tayang\',cid:\''+c.id+'\',id:\'\',mulai:\''+TD()+'\',selesai:\'\'})">Atur tayang</button></div>':'')+
-      edBoxFor(c.id,'')+'</div></div></div>';
+    h+='<div class="item"><div class="kr-t">'+esc(c.nama)+'</div><div class="tags"><span class="tag brand">'+esc(c.kampanye)+'</span></div><div class="sm mut">Masuk '+(age<=0?'hari ini':age+' hari lalu')+' · oleh '+esc(c.by)+'</div>'+
+      (can('adv')?'<div class="acts"><button class="btn s" onclick="newTayang(\''+c.id+'\')">Atur tayang</button></div>':'')+edBoxFor(c.id,'')+'</div>';
   });
   h+='</div>';
   h+='<div class="card a-tay"><div class="h">Tayang & Hasil ('+live.length+' creative)</div>';
   if(!live.length)h+='<div class="empty">Belum ada tayang.</div>';
   live.forEach(function(c){
-    h+='<div class="item"><div class="cr">'+thumb(c)+'<div class="bd"><div class="kr-t">'+esc(c.nama)+'</div>'+tagsOf(c)+links(c)+'</div></div>';
+    h+='<div class="item"><div class="kr-t">'+esc(c.nama)+'</div><div class="tags"><span class="tag brand">'+esc(c.kampanye)+'</span></div>';
     tayOf(c.id).forEach(function(t){h+=tayRow(c,t);});
-    if(can('adv'))h+='<div class="acts"><button class="btn s ghost" onclick="edOpen({type:\'tayang\',cid:\''+c.id+'\',id:\'\',mulai:\''+TD()+'\',selesai:\'\'})">+ Tayang baru</button></div>'+edBoxFor(c.id,'');
-    h+='</div>';
-  });
-  h+='</div>';
-  h+='<div class="card a-off"><div class="h">Penempatan offline ('+off.length+' creative)</div>';
-  if(!off.length)h+='<div class="empty">Belum ada creative Awareness Offline.</div>';
-  off.forEach(function(c){
-    var s=crStatus(c);
-    h+='<div class="item"><div class="cr">'+thumb(c)+'<div class="bd"><div class="kr-t">'+esc(c.nama)+'</div><span class="tag '+s.t+'">'+s.x+'</span>'+links(c)+'</div></div>';
-    tayOf(c.id).forEach(function(t){
-      h+='<div class="tr"><div class="row"><b class="sm">'+esc(t.lokasi)+'</b><span class="tag '+(t.pasang==='Sudah'?'ok':'warn')+' sp">'+(t.pasang==='Sudah'?'Sudah dipasang':'Belum dipasang')+'</span></div>'+
-        (t.mulai?'<div class="sm mut">'+(t.pasang==='Sudah'?'Dipasang ':'Rencana ')+dLabel(t.mulai)+'</div>':'')+(t.catatan?'<div class="sm">'+esc(t.catatan)+'</div>':'')+
-        ((can('adv')||can('creator'))?'<div class="acts"><button class="btn s ghost" onclick="offOpen(\''+t.id+'\')">Ubah</button><button class="btn s danger" onclick="tDel(\''+t.id+'\')">Hapus</button></div>':'')+edBoxFor(c.id,t.id)+'</div>';
-    });
-    if(can('adv')||can('creator'))h+='<div class="acts"><button class="btn s ghost" onclick="edOpen({type:\'offline\',cid:\''+c.id+'\',id:\'\',lokasi:\'\',pasang:\'Belum\',mulai:\'\',catatan:\'\'})">+ Tambah penempatan</button></div>'+edBoxFor(c.id,'');
+    if(can('adv'))h+='<div class="acts"><button class="btn s ghost" onclick="newTayang(\''+c.id+'\')">+ Tayang baru</button></div>'+edBoxFor(c.id,'');
     h+='</div>';
   });
   return h+'</div></div>';
 }
 function tayRow(c,t){
-  var st=tStatus(t),stT=st==='Berjalan'?'ok':st==='Selesai'?'brand':'warn',d=tDays(t);
-  var per=dLabel(t.mulai)+' → '+(t.selesai?dLabel(t.selesai):'sekarang')+(st==='Terjadwal'?'':' · '+d+' hari');
-  var info=t.jenis?jenisInfo(t.jenis):null,cost=info&&t.hasil!=null?costOf(t.spend,t.hasil,info):null;
+  var st=tStatus(t),stT=st==='Berjalan'?'ok':st==='Selesai'?'brand':'warn';
+  var per=dLabel(t.mulai)+' → '+(t.selesai?dLabel(t.selesai):'sekarang')+(st==='Terjadwal'?'':' · '+tDays(t)+' hari');
   var hs;
-  if(st==='Terjadwal')hs='<div class="sm mut">🔒 Hasil terkunci sampai iklan mulai tayang ('+dLabel(t.mulai)+').</div>';
-  else if(t.hasil==null)hs='<div class="sm" style="color:var(--warn);font-weight:700">Hasil belum diisi.</div>';
-  else{var v=verdict({spend:t.spend,hasil:t.hasil,cost:cost,info:info});
-    hs='<div class="sm"><b>'+n0(t.hasil)+'</b> '+esc(info.k)+' · belanja <b>'+rp(t.spend)+'</b> · biaya <b>'+(cost==null?'—':rp(cost))+'</b> <span class="mut">'+esc(info.u)+'</span> <span class="tag '+v.t+'">'+v.x+'</span></div>'+
-      '<div class="sm mut">Diperbarui '+dLabel((t.hasilTs||'').slice(0,10))+'</div>';}
+  if(st==='Terjadwal')hs='<div class="sm mut" style="margin-top:8px">🔒 Hasil terkunci sampai iklan mulai tayang ('+dLabel(t.mulai)+').</div>';
+  else if(t.hasil==null)hs='<div class="bigh na" style="margin-top:10px">—</div><div class="hj" style="color:var(--warn)">Hasil belum diisi</div>';
+  else hs='<div class="bigh" style="margin-top:10px">'+n0(t.hasil)+'</div><div class="hj">'+esc(jenisLabel(t.jenis))+'</div><div class="sm mut">Diperbarui '+dLabel((t.hasilTs||'').slice(0,10))+'</div>';
   var acts='';
   if(can('adv')){
     acts='<div class="acts">'+(st==='Terjadwal'?'':'<button class="btn s" onclick="hasilOpen(\''+t.id+'\')">'+(t.hasil==null?'Isi Hasil':'Ubah Hasil')+'</button>')+
@@ -543,47 +428,28 @@ function tayRow(c,t){
 function edBoxFor(cid,tid){
   var e=S.ed;if(!e||e.cid!==cid||(e.id||'')!==(tid||''))return '';
   if(e.type==='tayang')return '<div class="fbox" id="edbox"><div class="h">'+(e.id?'Ubah periode tayang':'Atur tayang')+'</div>'+
-    '<div class="grid2"><div><label class="lbl">Mulai tayang *</label><input class="inp" type="date" id="ed_mulai" value="'+esc(e.mulai)+'"></div><div><label class="lbl">Selesai (kosong = masih jalan)</label><input class="inp" type="date" id="ed_selesai" value="'+esc(e.selesai)+'"></div></div>'+
-    '<div class="sm mut" style="margin-top:8px">Hasil baru bisa diisi setelah tanggal mulai tiba.</div>'+
+    '<div class="dates"><label class="lbl">Mulai tayang *</label><input class="inp" type="date" id="ed_mulai" value="'+esc(e.mulai)+'">'+
+    '<label class="lbl">Selesai tayang (kosongkan kalau masih berjalan)</label><input class="inp" type="date" id="ed_selesai" value="'+esc(e.selesai)+'"></div>'+
+    '<div class="sm mut" style="margin-top:10px">Hasil baru bisa diisi setelah tanggal mulai tiba.</div>'+
     '<button class="btn" id="ed_save" onclick="saveTayang()">Simpan</button><button class="btn ghost" onclick="edClose()">Batal</button></div>';
-  if(e.type==='offline')return '<div class="fbox" id="edbox"><div class="h">'+(e.id?'Ubah penempatan':'Penempatan baru')+'</div>'+
-    '<label class="lbl">Lokasi / cara distribusi *</label><input class="inp" id="ed_lokasi" maxlength="100" value="'+esc(e.lokasi)+'" placeholder="mis. Perempatan Beran, Ngawi">'+
-    '<label class="lbl">Status *</label><div class="chips" style="margin-bottom:0"><button class="chip '+(e.pasang==='Belum'?'on':'')+'" onclick="edSync();S.ed.pasang=\'Belum\';render()">Belum dipasang</button><button class="chip '+(e.pasang==='Sudah'?'on':'')+'" onclick="edSync();S.ed.pasang=\'Sudah\';render()">Sudah dipasang / didistribusikan</button></div>'+
-    '<label class="lbl">Tanggal '+(e.pasang==='Sudah'?'pemasangan *':'rencana (opsional)')+'</label><input class="inp" type="date" id="ed_mulai" value="'+esc(e.mulai)+'">'+
-    '<button class="btn" id="ed_save" onclick="saveOffline()">Simpan</button><button class="btn ghost" onclick="edClose()">Batal</button></div>';
   if(e.type==='hasil'){
     var isX=e.jenis==='__x';
-    return '<div class="fbox" id="edbox"><div class="h">Hasil dari Meta · '+esc(dLabel(e.mulai))+' → '+(e.selesai?esc(dLabel(e.selesai)):'sekarang')+'</div>'+
-      '<div class="note warn" style="margin:0 0 10px"><span>⚠️</span><span>Isi <b>total sejak mulai tayang</b>, bukan angka per hari. Di Meta Ads Manager, atur rentang tanggal <b>sama persis</b> dengan periode tayang ini, lalu salin kolom <b>Hasil</b> dan <b>Jumlah yang dibelanjakan</b>.</span></div>'+
-      '<label class="lbl">Jenis hasil (lihat keterangan di bawah angka Hasil di Meta) *</label><select class="sel" id="ed_jenis" onchange="edSync();render()">'+
-      JENIS.map(function(j){return '<option value="'+esc(j.k)+'"'+(e.jenis===j.k?' selected':'')+'>'+esc(j.k)+'</option>';}).join('')+'<option value="__x"'+(isX?' selected':'')+'>Lainnya (ketik sendiri)…</option></select>'+
-      (isX?'<input class="inp" style="margin-top:8px" id="ed_jx" maxlength="40" value="'+esc(e.jx||'')+'" placeholder="mis. Pembelian, Tayangan video 3 detik">':'')+
-      '<div class="grid2"><div><label class="lbl">Hasil *</label><input class="inp" type="number" inputmode="numeric" min="0" step="1" id="ed_hasil" value="'+esc(e.hasil)+'" oninput="hasilLive()"></div>'+
-      '<div><label class="lbl">Dibelanjakan (Rp) *</label><input class="inp" type="number" inputmode="numeric" min="0" step="1" id="ed_spend" value="'+esc(e.spend)+'" oninput="hasilLive()"></div></div>'+
-      '<div class="pv" id="ed_pv">—</div>'+
+    return '<div class="fbox" id="edbox"><div class="h">Hasil · '+esc(dLabel(e.mulai))+' → '+(e.selesai?esc(dLabel(e.selesai)):'sekarang')+'</div>'+
+      '<label class="lbl">Jenis hasil (sama dengan kolom Hasil di Meta)</label><select class="sel" id="ed_jenis" onchange="edSync();render()">'+
+      JENIS.map(function(j){return '<option value="'+esc(j)+'"'+(e.jenis===j?' selected':'')+'>'+esc(j)+'</option>';}).join('')+'<option value="__x"'+(isX?' selected':'')+'>Lainnya (ketik sendiri)…</option></select>'+
+      (isX?'<input class="inp" style="margin-top:8px" id="ed_jx" maxlength="40" value="'+esc(e.jx||'')+'" placeholder="mis. Pembelian">':'')+
+      '<label class="lbl">Hasil</label><input class="inp huge" type="number" inputmode="numeric" min="0" step="1" id="ed_hasil" value="'+esc(e.hasil)+'" placeholder="0">'+
+      '<div class="sm mut" style="margin-top:8px">Isi <b>total sejak mulai tayang</b>, bukan per hari. Di Meta, atur rentang tanggal sama dengan periode tayang ini.</div>'+
       '<button class="btn" id="ed_save" onclick="saveHasil()">Simpan Hasil</button><button class="btn ghost" onclick="edClose()">Batal</button></div>';
   }
   return '';
 }
-function hasilLive(){
-  var el=$('ed_pv');if(!el||!$('ed_hasil'))return;
-  var j=$('ed_jenis').value==='__x'?($('ed_jx')?$('ed_jx').value:''):$('ed_jenis').value,info=jenisInfo(j);
-  var h=$('ed_hasil').value,s=$('ed_spend').value;
-  if(h===''||s===''||isNaN(+h)||isNaN(+s)){el.textContent='Biaya per hasil akan dihitung otomatis.';return;}
-  var c=costOf(+s,+h,info);
-  el.textContent=c==null?'Hasil 0: biaya per hasil belum bisa dihitung.':'Biaya per hasil: '+rp(c)+' '+info.u+' (cocokkan dengan Meta)';
-}
 function hasilOpen(tid){
   var t=D.tayang.filter(function(x){return x.id===tid;})[0];if(!t)return;
-  var known=t.jenis&&JENIS.some(function(j){return j.k.toLowerCase()===t.jenis.toLowerCase();});
-  var jk=known?jenisInfo(t.jenis).k:(t.jenis?'__x':JENIS[0].k);
-  edOpen({type:'hasil',cid:t.cid,id:t.id,mulai:t.mulai,selesai:t.selesai,jenis:jk,jx:known?'':(t.jenis||''),hasil:t.hasil==null?'':String(t.hasil),spend:t.spend==null?'':String(t.spend)});
+  var known=t.jenis&&JENIS.some(function(j){return j.toLowerCase()===t.jenis.toLowerCase();});
+  var jk=known?jenisLabel(t.jenis):(t.jenis?'__x':JENIS[0]);
+  edOpen({type:'hasil',cid:t.cid,id:t.id,mulai:t.mulai,selesai:t.selesai,jenis:jk,jx:known?'':(t.jenis||''),hasil:t.hasil==null?'':String(t.hasil)});
 }
-function offOpen(tid){
-  var t=D.tayang.filter(function(x){return x.id===tid;})[0];if(!t)return;
-  edOpen({type:'offline',cid:t.cid,id:t.id,lokasi:t.lokasi,pasang:t.pasang||'Belum',mulai:t.mulai,catatan:t.catatan||''});
-}
-function tPayload(t,extra){return Object.assign({action:'tayang',id:t.id,cid:t.cid,mulai:t.mulai,selesai:t.selesai||''},extra||{});}
 function saveTayang(){
   edSync();var e=S.ed;
   if(!e.mulai){toast('Tanggal mulai tayang wajib diisi',true);return;}
@@ -595,25 +461,18 @@ function saveHasil(){
   edSync();var e=S.ed;
   var j=e.jenis==='__x'?String(e.jx||'').trim():e.jenis;
   if(!j){toast('Isi jenis hasil',true);return;}
-  if(e.hasil===''||e.spend===''){toast('Hasil dan Dibelanjakan wajib diisi (isi 0 kalau memang 0)',true);return;}
-  if(!/^\d+$/.test(String(e.hasil))||!/^\d+$/.test(String(e.spend))){toast('Hasil dan Dibelanjakan harus bilangan bulat tanpa titik/koma',true);return;}
+  if(e.hasil===''){toast('Isi angka Hasil (isi 0 kalau memang 0)',true);return;}
+  if(!/^\d+$/.test(String(e.hasil))){toast('Hasil harus bilangan bulat tanpa titik/koma',true);return;}
   $('ed_save').disabled=true;
-  saveAndReload({action:'tayang',id:e.id,cid:e.cid,mulai:e.mulai,selesai:e.selesai||'',jenis:j,hasil:+e.hasil,spend:+e.spend},'Hasil tersimpan').then(function(ok){if(ok){S.ed=null;render();}else{var b=$('ed_save');if(b)b.disabled=false;}});
-}
-function saveOffline(){
-  edSync();var e=S.ed;
-  if(!String(e.lokasi||'').trim()){toast('Isi lokasi / cara distribusi',true);return;}
-  if(e.pasang==='Sudah'&&!e.mulai){toast('Isi tanggal pemasangan',true);return;}
-  $('ed_save').disabled=true;
-  saveAndReload({action:'tayang',id:e.id||uid('t'),cid:e.cid,lokasi:e.lokasi.trim(),pasang:e.pasang,mulai:e.mulai||''},'Penempatan tersimpan').then(function(ok){if(ok){S.ed=null;render();}else{var b=$('ed_save');if(b)b.disabled=false;}});
+  saveAndReload({action:'tayang',id:e.id,cid:e.cid,mulai:e.mulai,selesai:e.selesai||'',jenis:j,hasil:+e.hasil},'Hasil tersimpan').then(function(ok){if(ok){S.ed=null;render();}else{var b=$('ed_save');if(b)b.disabled=false;}});
 }
 function tStop(id){
   var t=D.tayang.filter(function(x){return x.id===id;})[0];if(!t)return;
   if(!confirm('Hentikan tayang ini hari ini ('+dLabel(TD())+')?'))return;
-  saveAndReload(tPayload(t,{selesai:TD()}),'Tayang dihentikan');
+  saveAndReload({action:'tayang',id:t.id,cid:t.cid,mulai:t.mulai,selesai:TD()},'Tayang dihentikan');
 }
 function tDel(id){
-  if(!confirm('Hapus data ini? Hasil yang sudah diisi ikut hilang dari dashboard.'))return;
+  if(!confirm('Hapus tayang ini? Hasil yang sudah diisi ikut hilang dari dashboard.'))return;
   saveAndReload({action:'tayangDelete',id:id},'Dihapus');
 }
 

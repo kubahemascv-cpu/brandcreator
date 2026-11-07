@@ -1,5 +1,5 @@
 // SW Brand Creator — network-first untuk HTML, cache-first untuk aset statis.
-const CACHE = 'brand-creator-v4';
+const CACHE = 'brand-creator-v5';
 const ASSETS = ['manifest.json','icon-192.png','icon-512.png'];
 
 self.addEventListener('install', function (e) {
