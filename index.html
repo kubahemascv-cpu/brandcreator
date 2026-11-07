@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Brand Creator · Kubah Emas</title>
+<meta name="theme-color" content="#0F2A2E">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Brand Creator">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-512.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --m:#2CC5B8;--m-d:#0B6B68;--m-l:#E3F6F4;--m-b:#A6E1DB;
+  --ch:#0F2A2E;--ch2:#17383D;--bg:#F1F6F6;--bg2:#E2EBEB;--card:#fff;--card2:#F8FBFB;
+  --txt:#12262A;--txt2:#3B4F53;--mut:#6B8084;--bdr:#DCE7E7;
+  --ok:#16A34A;--ok-l:#E8F7EE;--warn:#D97706;--warn-l:#FEF3E2;--bad:#DC2626;--bad-l:#FEF3F2;
+  --shd:0 1px 2px rgba(15,42,46,.04),0 6px 20px rgba(15,42,46,.06);
+  --font:'Plus Jakarta Sans',-apple-system,sans-serif;--r:18px;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--txt);min-height:100vh;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;padding-bottom:96px}
+button,input,select,textarea{font-family:var(--font)}
+.top{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--bdr);padding:10px 18px;padding-top:max(10px,env(safe-area-inset-top))}
+.top-in{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.logo{width:40px;height:40px;border-radius:12px;background:var(--ch);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;letter-spacing:.04em;color:var(--m);flex-shrink:0}
+.bn{font-size:15px;font-weight:800;letter-spacing:-.01em}.bs{font-size:11px;color:var(--mut)}
+.who{margin-left:auto;font-size:11.5px;font-weight:700;background:var(--ch);color:var(--m);padding:8px 13px;border-radius:999px;border:none;cursor:pointer}
+.wrap{max-width:760px;margin:0 auto;padding:18px}
+.card{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);box-shadow:var(--shd);padding:18px;margin-bottom:14px}
+.hero{background:radial-gradient(120% 140% at 100% 0%,rgba(44,197,184,.34),transparent 55%),var(--ch);color:#fff;border:none}
+.hero .mut{color:rgba(255,255,255,.62)}
+.mut{color:var(--mut)}
+.h{font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);margin-bottom:8px}
+.hero .h{color:rgba(255,255,255,.55)}
+.mid{font-size:22px;font-weight:800;letter-spacing:-.01em;line-height:1.15}
+.sm{font-size:12px;line-height:1.55}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:6px}
+.stat b{display:block;font-size:26px;font-weight:800;color:var(--m);line-height:1.05}.stat span{font-size:10.5px;color:rgba(255,255,255,.65);font-weight:600}
+.row{display:flex;align-items:center;gap:10px}
+.sp{margin-left:auto}
+.tag{display:inline-block;font-size:10.5px;font-weight:800;padding:4px 9px;border-radius:99px;white-space:nowrap}
+.tag.ok{background:var(--ok-l);color:var(--ok)}.tag.warn{background:var(--warn-l);color:var(--warn)}.tag.bad{background:var(--bad-l);color:var(--bad)}.tag.na{background:var(--bg2);color:var(--mut)}.tag.brand{background:var(--m-l);color:var(--m-d)}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.note{display:flex;gap:10px;font-size:12px;line-height:1.55;padding:11px 13px;border-radius:13px;background:var(--card2);border:1px solid var(--bdr);margin-bottom:14px;color:var(--txt2)}
+.note.warn{background:var(--warn-l);border-color:#F6D8A8;color:#7C4A03}
+.note.bad{background:var(--bad-l);border-color:#FBC9C4;color:#8F1D14}
+.note.ok{background:var(--ok-l);border-color:#BDE5CC;color:#14532D}
+.kr-t{font-size:13.5px;font-weight:800;line-height:1.35;word-break:break-word}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{padding:8px 6px;text-align:left;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);border-bottom:2px solid var(--bdr)}
+td{padding:10px 6px;border-bottom:1px solid var(--bdr);vertical-align:top}
+th.r,td.r{text-align:right}
+tr:last-child td{border-bottom:none}
+.lbl{display:block;font-size:11px;font-weight:700;color:var(--mut);margin:12px 0 6px}
+.lbl:first-child{margin-top:0}
+.inp,.sel,.ta{width:100%;border:1.5px solid var(--bdr);border-radius:13px;background:var(--card2);padding:0 14px;font-size:14px;font-weight:600;color:var(--txt);outline:none}
+.inp,.sel{height:46px}
+.ta{padding:12px 14px;min-height:78px;resize:vertical;font-weight:500;line-height:1.5}
+.inp:focus,.sel:focus,.ta:focus{border-color:var(--m-d);background:#fff}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn{width:100%;height:50px;border:none;border-radius:14px;background:var(--m);color:var(--ch);font-size:14.5px;font-weight:800;cursor:pointer;margin-top:16px}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:var(--bg2);color:var(--txt)}
+.btn.dark{background:var(--ch);color:var(--m)}
+.btn.s{height:36px;font-size:12px;margin-top:0;width:auto;padding:0 14px;border-radius:11px}
+.btn.danger{background:var(--bad-l);color:var(--bad)}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.chip{border:1.5px solid var(--bdr);background:var(--card);border-radius:99px;padding:9px 15px;font-size:12.5px;font-weight:700;color:var(--txt2);cursor:pointer}
+.chip.on{background:var(--ch);color:var(--m);border-color:var(--ch)}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(255,255,255,.95);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--bdr);padding:8px 8px max(8px,env(safe-area-inset-bottom))}
+.nav-in{max-width:760px;margin:0 auto;display:flex;gap:2px}
+.nav button{flex:1;border:none;background:none;padding:7px 2px;border-radius:12px;font-size:10.5px;font-weight:700;color:var(--mut);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
+.nav button .ic{font-size:19px;line-height:1}
+.nav button.on{background:var(--ch);color:var(--m)}
+.gate{max-width:380px;margin:12vh auto 0;padding:0 18px;text-align:center}
+.gate .logo{width:64px;height:64px;font-size:18px;border-radius:19px;margin:0 auto 18px}
+.pin{letter-spacing:.5em;text-align:center;font-size:22px;font-weight:800}
+.pick{display:flex;flex-direction:column;gap:10px;text-align:left}
+.pick button{border:1.5px solid var(--bdr);background:var(--card);border-radius:15px;padding:14px 16px;cursor:pointer;text-align:left}
+.pick b{display:block;font-size:15px}.pick span{font-size:11.5px;color:var(--mut)}
+.toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);background:var(--ch);color:#fff;padding:11px 18px;border-radius:99px;font-size:12.5px;font-weight:700;z-index:99;max-width:90vw;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.toast.bad{background:var(--bad);border-radius:16px}
+.spin{text-align:center;padding:60px 0;color:var(--mut);font-size:13px;font-weight:600}
+.item{border-top:1px solid var(--bdr);padding:12px 0}.item:first-child{border-top:none;padding-top:0}
+.cr{display:flex;gap:12px;align-items:flex-start}
+.thw{position:relative;width:64px;height:64px;border-radius:12px;background:var(--bg2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px;overflow:hidden}
+.thw img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cr .bd{flex:1;min-width:0}
+.tr{background:var(--card2);border:1px solid var(--bdr);border-radius:13px;padding:11px 12px;margin-top:10px}
+.tr .k{font-size:11px;color:var(--mut);font-weight:700}
+.linkb{display:inline-block;font-size:12px;font-weight:800;color:var(--m-d);text-decoration:none;margin-right:12px}
+.pv{background:var(--m-l);border-radius:12px;padding:10px 12px;font-size:12.5px;font-weight:700;margin-top:10px}
+.fbox{border:1.5px solid var(--m-b);background:#F4FBFA;border-radius:14px;padding:14px;margin-top:10px}
+.rk{font-weight:800;color:var(--m-d)}
+.empty{text-align:center;color:var(--mut);font-size:12.5px;padding:18px 6px}
+@media(min-width:720px){body{padding-bottom:0}.nav{position:sticky;top:61px;bottom:auto;border-top:none;border-bottom:1px solid var(--bdr)}.nav button{flex-direction:row;justify-content:center;font-size:12.5px;gap:8px}}
+</style>
+</head>
+<body>
+<div class="top" id="top" style="display:none"><div class="top-in"><div class="logo">BC</div><div><div class="bn">Brand Creator</div><div class="bs">Kubah Emas · Creative ↔ Advertiser</div></div><button class="who" id="whobtn" onclick="switchWho()">—</button></div></div>
+<div class="nav" id="nav" style="display:none"><div class="nav-in" id="navin"></div></div>
+<div class="wrap" id="view"></div>
+<div id="toastbox"></div>
+<script>
+// ═════════════ KONFIGURASI ═════════════
+var APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbx7fvep5uCT_s_RUYbbcv4liCG0jRq5z53kzmz9BaL3QDTw2dI2PfZGo00UHhHnIPu0/exec';
+var PIN='1601';
+var PEOPLE={
+  Lukman:{role:'Advertiser · Admin',creator:true,adv:true,admin:true},
+  Dicky:{role:'Brand Creator',creator:true},
+  Tri:{role:'CS Kubah Emas (lihat saja)'},
+  Faizal:{role:'CS Kumasindo (lihat saja)'}
+};
+// "Hasil" mengikuti kolom Hasil di Meta Ads Manager. m = pengali biaya (Meta menampilkan Jangkauan per 1.000 orang)
+var JENIS=[
+  {k:'Percakapan WA',m:1,cfg:'t_wa',u:'per percakapan'},
+  {k:'ThruPlay',m:1,cfg:'t_thruplay',u:'per ThruPlay'},
+  {k:'Klik tautan',m:1,cfg:'t_klik',u:'per klik'},
+  {k:'Jangkauan',m:1000,cfg:'t_jangkauan',u:'per 1.000 orang'}
+];
+var CFG_FIELDS=[['min_spend','Belanja minimum agar creative dinilai (Rp)'],['t_wa','Target biaya per Percakapan WA (Rp)'],['t_thruplay','Target biaya per ThruPlay (Rp)'],['t_klik','Target biaya per Klik tautan (Rp)'],['t_jangkauan','Target biaya per 1.000 Jangkauan (Rp)']];
+var MONTH_ID=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+var UP_EXT={jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif',mp4:'video/mp4',mov:'video/quicktime',pdf:'application/pdf'};
+var UP_MAX=20*1024*1024;
+
+// ═════════════ UTIL ═════════════
+var S={ok:false,who:'',tab:'dash',loaded:false,err:'',dcat:'all',ccat:'all',cf:null,ed:null};
+var D={config:{},creatives:[],tayang:[],today:''};
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v);}catch(e){return null;}}
+function p2(n){return String(n).padStart(2,'0');}
+function dstr(d){return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());}
+function pd(s){var a=s.split('-');return new Date(+a[0],+a[1]-1,+a[2]);}
+function TD(){return D.today||dstr(new Date());}
+function dDiff(a,b){return Math.round((pd(b)-pd(a))/864e5);}
+function dLabel(s){if(!s)return '—';var d=pd(s);return d.getDate()+' '+MONTH_ID[d.getMonth()].slice(0,3)+' '+d.getFullYear();}
+function n0(n){return Math.round(n).toLocaleString('id-ID');}
+function rp(n){return n==null?'—':'Rp '+n0(n);}
+function fSize(n){return n<1048576?Math.max(1,Math.round(n/1024))+' KB':(n/1048576).toFixed(1)+' MB';}
+function uid(p){return p+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function toast(msg,bad){var t=document.createElement('div');t.className='toast'+(bad?' bad':'');t.textContent=msg;$('toastbox').appendChild(t);setTimeout(function(){t.remove();},bad?5500:2200);}
+function can(k){return !!(PEOPLE[S.who]&&PEOPLE[S.who][k]);}
+function safeUrl(u){return /^https?:\/\//i.test(u||'')?u:'';}
+function note(t,type){return '<div class="note '+(type||'')+'"><span>'+(type==='warn'?'⚠️':type==='bad'?'❌':type==='ok'?'✅':'ℹ️')+'</span><span>'+t+'</span></div>';}
+
+// ═════════════ API ═════════════
+function apiReady(){return APPS_SCRIPT_URL&&APPS_SCRIPT_URL.indexOf('PASTE_')!==0;}
+function apiLoad(){
+  return fetch(APPS_SCRIPT_URL+'?action=load&pin='+encodeURIComponent(PIN)+'&cb='+Date.now()).then(function(r){return r.json();}).then(function(j){
+    if(!j.ok)throw new Error(j.error||'Server menolak permintaan');
+    D={config:j.config||{},creatives:j.creatives||[],tayang:j.tayang||[],today:j.today||''};
+  });
+}
+function apiPost(p){
+  return fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({pin:PIN,by:S.who},p))})
+    .then(function(r){return r.json();}).then(function(j){if(!j.ok)throw new Error(j.error||'Gagal menyimpan');return j;});
+}
+function saveAndReload(p,okMsg){
+  return apiPost(p).then(function(){return apiLoad();}).then(function(){toast(okMsg||'Tersimpan');render();return true;})
+    .catch(function(e){var m=String(e.message||e);if(/tidak dikenal/.test(m))m='Server belum diperbarui: deploy ulang Apps Script terbaru.';toast(m,true);return false;});
+}
+
+// ═════════════ DATA TURUNAN ═════════════
+function cfgNum(k){var v=D.config?D.config[k]:undefined;if(v===undefined||v==='')return null;var n=Number(v);return isNaN(n)?null:n;}
+function minSpend(){var v=cfgNum('min_spend');return v==null?100000:v;}
+function creativeOf(id){return D.creatives.filter(function(c){return c.id===id;})[0]||null;}
+function tayOf(cid){return D.tayang.filter(function(t){return t.cid===cid;}).sort(function(a,b){return a.mulai<b.mulai?1:a.mulai>b.mulai?-1:0;});}
+function isOn(c){return c.medium==='Online';}
+function tStatus(t){var td=TD();if(td<t.mulai)return 'Terjadwal';if(t.selesai&&td>t.selesai)return 'Selesai';return 'Berjalan';}
+function tDays(t){var td=TD();if(td<t.mulai)return 0;var end=t.selesai&&t.selesai<td?t.selesai:td;return dDiff(t.mulai,end)+1;}
+function katLabel(c){return c.kategori==='Penjualan'?'Iklan Penjualan':'Awareness';}
+function jenisInfo(name){var n=String(name||'').trim().toLowerCase();for(var i=0;i<JENIS.length;i++)if(JENIS[i].k.toLowerCase()===n)return JENIS[i];return {k:String(name||'').trim(),m:1,cfg:null,u:'per hasil'};}
+function costOf(spend,hasil,info){return hasil>0?spend/hasil*info.m:null;}
+function verdict(a){
+  if(a.spend<minSpend())return {t:'na',x:'Data masih sedikit'};
+  if(a.hasil===0)return {t:'bad',x:'Belum ada hasil'};
+  var tg=a.info.cfg?cfgNum(a.info.cfg):null;
+  if(tg==null||tg===0)return {t:'na',x:'Belum ada target'};
+  if(a.cost<=tg)return {t:'ok',x:'Sesuai target'};
+  if(a.cost<=tg*1.5)return {t:'warn',x:'Di atas target'};
+  return {t:'bad',x:'Jauh di atas target'};
+}
+// gabungan per creative per jenis hasil (hanya tayang online yang sudah punya hasil)
+function aggs(){
+  var m={};
+  D.tayang.forEach(function(t){
+    if(!t.jenis||t.hasil==null||t.spend==null)return;
+    var c=creativeOf(t.cid);if(!c||!isOn(c))return;
+    var info=jenisInfo(t.jenis),key=t.cid+'|'+info.k.toLowerCase();
+    var a=m[key]||(m[key]={c:c,info:info,spend:0,hasil:0,days:0,n:0});
+    a.spend+=t.spend;a.hasil+=t.hasil;a.days+=tDays(t);a.n++;
+  });
+  return Object.keys(m).map(function(k){var a=m[k];a.cost=costOf(a.spend,a.hasil,a.info);a.v=verdict(a);return a;});
+}
+function offStat(c){var ps=tayOf(c.id),sudah=ps.filter(function(p){return p.pasang==='Sudah';}).length;return {n:ps.length,sudah:sudah};}
+function crStatus(c){
+  if(isOn(c)){
+    var ts=tayOf(c.id);if(!ts.length)return {t:'na',x:'Belum tayang'};
+    var run=ts.filter(function(t){return tStatus(t)==='Berjalan';}).length;
+    if(run)return {t:'ok',x:'Berjalan'+(ts.length>1?' · '+ts.length+' tayang':'')};
+    if(ts.every(function(t){return tStatus(t)==='Terjadwal';}))return {t:'warn',x:'Terjadwal'};
+    return {t:'brand',x:'Selesai'+(ts.length>1?' · '+ts.length+' tayang':'')};
+  }
+  var o=offStat(c);
+  if(!o.n)return {t:'na',x:'Belum ada penempatan'};
+  if(!o.sudah)return {t:'warn',x:'Belum dipasang'};
+  return {t:o.sudah===o.n?'ok':'brand',x:'Terpasang '+o.sudah+'/'+o.n};
+}
+function thumb(c){
+  var ico=!c.file?(isOn(c)?'🎨':'🪧'):c.file.mime.indexOf('video')===0?'🎬':c.file.mime==='application/pdf'?'📄':'🖼️';
+  return '<div class="thw"><span>'+ico+'</span>'+(c.file?'<img src="'+esc(c.file.thumb)+'" loading="lazy" alt="" onerror="this.remove()">':'')+'</div>';
+}
+function tagsOf(c){
+  return '<div class="tags"><span class="tag '+(c.kategori==='Penjualan'?'brand':'na')+'">'+katLabel(c)+'</span><span class="tag na">'+c.medium+'</span></div>';
+}
+function links(c){
+  var h='';
+  if(c.file)h+='<a class="linkb" href="'+esc(c.file.url)+'" target="_blank" rel="noopener">▶ Buka file</a>';
+  if(safeUrl(c.link))h+='<a class="linkb" href="'+esc(c.link)+'" target="_blank" rel="noopener">🔗 Buka link</a>';
+  return h?'<div style="margin-top:6px">'+h+'</div>':'';
+}
+
+// ═════════════ SHELL ═════════════
+function gate(){
+  document.body.classList.remove('shell');$('top').style.display='none';$('nav').style.display='none';
+  $('view').innerHTML='<div class="gate"><div class="logo">BC</div><div class="mid" style="margin-bottom:6px">Brand Creator</div>'+
+    '<div class="sm mut" style="margin-bottom:22px">Masukkan PIN tim untuk membuka.</div>'+
+    '<input class="inp pin" id="pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off" onkeydown="if(event.key===\'Enter\')tryPin()">'+
+    '<div class="sm" id="pinerr" style="color:var(--bad);min-height:22px;margin-top:8px;font-weight:700"></div>'+
+    '<button class="btn" onclick="tryPin()">Buka</button></div>';
+  setTimeout(function(){var e=$('pin');if(e)e.focus();},50);
+}
+function tryPin(){var v=$('pin').value;if(v===PIN){S.ok=true;ls('bc_pin_ok','1');start();}else{$('pinerr').textContent='PIN salah.';$('pin').value='';}}
+function pickWho(){
+  $('top').style.display='none';$('nav').style.display='none';
+  $('view').innerHTML='<div class="gate" style="margin-top:8vh"><div class="logo">BC</div><div class="mid" style="margin-bottom:6px">Siapa Anda?</div>'+
+    '<div class="sm mut" style="margin-bottom:20px">Pilihan diingat di HP ini. Ini penanda, bukan verifikasi identitas.</div><div class="pick">'+
+    Object.keys(PEOPLE).map(function(n){return '<button onclick="setWho(\''+n+'\')"><b>'+n+'</b><span>'+PEOPLE[n].role+'</span></button>';}).join('')+'</div></div>';
+}
+function setWho(n){S.who=n;ls('bc_who',n);S.tab='dash';S.cf=null;S.ed=null;start();}
+function switchWho(){ls('bc_who',null);S.who='';pickWho();}
+function start(){
+  if(!S.ok){gate();return;}
+  if(!S.who||!PEOPLE[S.who]){pickWho();return;}
+  $('top').style.display='block';$('nav').style.display='block';$('whobtn').textContent=S.who+' ⇄';
+  if(!apiReady()){$('view').innerHTML='<div class="card"><div class="mid" style="margin-bottom:8px">Apps Script belum dipasang</div><div class="sm mut">Isi <b>APPS_SCRIPT_URL</b> di index.html dengan URL deploy (/exec), lalu upload ulang.</div></div>';return;}
+  $('view').innerHTML='<div class="spin">Memuat data…</div>';
+  apiLoad().then(function(){S.loaded=true;S.err='';render();}).catch(function(e){
+    var m=String(e.message||e);
+    if(/PIN salah/.test(m)){ls('bc_pin_ok',null);S.ok=false;gate();return;}
+    S.err=m;render();
+  });
+}
+function nav(){
+  var items=[['dash','📊','Dashboard'],['cr','🎨','Creative'],['adv','📣','Advertiser']];
+  $('navin').innerHTML=items.map(function(i){return '<button class="'+(S.tab===i[0]?'on':'')+'" onclick="goTab(\''+i[0]+'\')"><span class="ic">'+i[1]+'</span>'+i[2]+'</button>';}).join('');
+}
+function goTab(t){S.tab=t;S.cf=null;S.ed=null;render();window.scrollTo(0,0);}
+function render(){
+  if(!S.ok||!S.who)return;
+  nav();
+  if(S.err&&!S.loaded){$('view').innerHTML='<div class="card"><div class="mid" style="margin-bottom:8px">Gagal memuat data</div><div class="sm mut" style="margin-bottom:6px">'+esc(S.err)+'</div><button class="btn" onclick="start()">Coba lagi</button></div>';return;}
+  $('view').innerHTML=S.tab==='cr'?vCreative():S.tab==='adv'?vAdv():vDash();
+  if(S.ed&&S.ed.type==='hasil')hasilLive();
+}
+
+// ═════════════ DASHBOARD ═════════════
+function chipsCat(cur,fn,opts){
+  return '<div class="chips">'+opts.map(function(o){return '<button class="chip '+(cur===o[0]?'on':'')+'" onclick="'+fn+'(\''+o[0]+'\')">'+o[1]+'</button>';}).join('')+'</div>';
+}
+function setDcat(v){S.dcat=v;render();}
+function todoList(){
+  var out=[],td=TD();
+  D.creatives.forEach(function(c){
+    if(isOn(c)){
+      var ts=tayOf(c.id);
+      if(!ts.length){var age=dDiff((c.created||td).slice(0,10),td);if(age>=3)out.push({k:'adv',x:'<b>'+esc(c.nama)+'</b> menunggu diatur tayangnya '+age+' hari.'});}
+      ts.forEach(function(t){
+        var st=tStatus(t);if(st==='Terjadwal')return;
+        if(t.hasil==null)out.push({k:'adv',x:'<b>'+esc(c.nama)+'</b> ('+dLabel(t.mulai)+'): Hasil belum diisi.'});
+        else if(st==='Berjalan'&&t.hasilTs){var a=dDiff(t.hasilTs.slice(0,10),td);if(a>=3)out.push({k:'adv',x:'<b>'+esc(c.nama)+'</b> masih berjalan, Hasil terakhir diperbarui '+a+' hari lalu.'});}
+      });
+    }else{
+      var o=offStat(c);
+      if(!o.sudah)out.push({k:'adv',x:'<b>'+esc(c.nama)+'</b> (offline) belum dipasang/didistribusikan.'});
+    }
+  });
+  return out;
+}
+function vDash(){
+  var cs=D.creatives,on=cs.filter(isOn),off=cs.filter(function(c){return !isOn(c);});
+  var queue=on.filter(function(c){return !tayOf(c.id).length;}).length;
+  var run=D.tayang.filter(function(t){var c=creativeOf(t.cid);return c&&isOn(c)&&tStatus(t)==='Berjalan';}).length;
+  var pl=0,ps=0;off.forEach(function(c){var o=offStat(c);pl+=o.n;ps+=o.sudah;});
+  var h='<div class="card hero"><div class="h">Ringkasan</div><div class="stats">'+
+    '<div class="stat"><b>'+cs.length+'</b><span>Creative</span></div>'+
+    '<div class="stat"><b>'+queue+'</b><span>Menunggu tayang</span></div>'+
+    '<div class="stat"><b>'+run+'</b><span>Sedang tayang</span></div>'+
+    '<div class="stat"><b>'+ps+'/'+pl+'</b><span>Offline terpasang</span></div></div></div>';
+  var todo=todoList();
+  h+='<div class="card"><div class="h">Perlu ditindak</div>'+(todo.length?todo.map(function(t){return '<div class="item"><div class="sm">'+t.x+'</div></div>';}).join('')+'<button class="btn s ghost" style="margin-top:10px" onclick="goTab(\'adv\')">Buka tab Advertiser</button>':'<div class="sm mut">✅ Tidak ada yang tertunda.</div>')+'</div>';
+  h+=chipsCat(S.dcat,'setDcat',[['all','Semua'],['Penjualan','Iklan Penjualan'],['Awareness','Awareness']]);
+  var ag=aggs().filter(function(a){return S.dcat==='all'||a.c.kategori===S.dcat;});
+  var groups={};ag.forEach(function(a){var k=a.info.k.toLowerCase();(groups[k]=groups[k]||{info:a.info,list:[]}).list.push(a);});
+  var keys=Object.keys(groups).sort(function(a,b){return groups[b].list.length-groups[a].list.length;});
+  if(!keys.length)h+='<div class="card"><div class="h">Penilaian creative</div><div class="empty">Belum ada Hasil yang diisi'+(S.dcat!=='all'?' untuk kategori ini':'')+'. Penilaian muncul setelah Advertiser mengisi Hasil dari Meta.</div></div>';
+  keys.forEach(function(k){
+    var g=groups[k],info=g.info,tg=info.cfg?cfgNum(info.cfg):null,minS=minSpend();
+    var ranked=g.list.filter(function(a){return a.spend>=minS&&a.cost!=null;}).sort(function(a,b){return a.cost-b.cost;});
+    var rest=g.list.filter(function(a){return ranked.indexOf(a)<0;}).sort(function(a,b){return b.spend-a.spend;});
+    var rows=ranked.concat(rest);
+    h+='<div class="card"><div class="h">Biaya '+esc(info.u)+' · '+esc(info.k)+'</div>'+
+      '<div class="sm mut" style="margin-bottom:8px">'+(tg?'Target: <b>'+rp(tg)+'</b> '+esc(info.u)+'. ':'Belum ada target untuk jenis hasil ini (atur di bawah). ')+'Dinilai hanya dengan creative yang jenis hasilnya sama. Dihitung = dibelanjakan ÷ hasil, sama seperti "Biaya per Hasil" di Meta. Dinilai mulai belanja '+rp(minS)+'.</div>'+
+      rows.map(function(a){var i=ranked.indexOf(a);
+        return '<div class="item"><div class="row" style="align-items:flex-start"><div style="flex:1;min-width:0"><div class="kr-t"><span class="rk">'+(i>=0?(i===0&&ranked.length>1?'🏆 ':'#'+(i+1)+' '):'')+'</span>'+esc(a.c.nama)+'</div>'+
+          '<div class="sm mut" style="margin-top:2px">'+katLabel(a.c)+' · '+a.days+' hari · '+a.n+' tayang</div>'+
+          '<div class="sm" style="margin-top:4px">Belanja <b>'+n0(a.spend)+'</b> · Hasil <b>'+n0(a.hasil)+'</b></div></div>'+
+          '<div style="text-align:right;flex-shrink:0"><div class="mid">'+(a.cost==null?'—':n0(a.cost))+'</div><div style="margin-top:4px"><span class="tag '+a.v.t+'">'+a.v.x+'</span></div></div></div></div>';}).join('')+'</div>';
+  });
+  if(off.length){
+    h+='<div class="card"><div class="h">Creative offline</div>'+off.map(function(c){var s=crStatus(c);return '<div class="item"><div class="row"><div class="kr-t">'+esc(c.nama)+'</div><span class="tag '+s.t+' sp">'+s.x+'</span></div></div>';}).join('')+'</div>';
+  }
+  if(can('admin')){
+    h+='<div class="card"><div class="h">Target & ambang (admin)</div><div class="sm mut" style="margin-bottom:8px">Kosongkan untuk menghapus target. Angka dalam Rupiah. Contoh dari Blueprint: biaya per Percakapan WA di bawah Rp 15.000 (MOFU) dan Rp 10.000 (BOFU); baseline lama Rp 29.000–30.000.</div>'+
+      CFG_FIELDS.map(function(f){var v=D.config[f[0]];return '<label class="lbl">'+esc(f[1])+'</label><input class="inp" type="number" inputmode="numeric" min="0" step="1" id="cf_'+f[0]+'" value="'+(v==null?(f[0]==='min_spend'?'100000':''):esc(v))+'">';}).join('')+
+      '<button class="btn" id="cf_save" onclick="saveCfg()">Simpan target</button></div>';
+  }
+  return h;
+}
+function saveCfg(){
+  var vals={},bad=null;
+  CFG_FIELDS.forEach(function(f){var s=$('cf_'+f[0]).value.trim();if(s!==''&&(isNaN(Number(s))||Number(s)<0))bad=f[1];var old=D.config[f[0]];if(s!==(old==null?'':String(old))&&!(old==null&&f[0]==='min_spend'&&s==='100000'))vals[f[0]]=s;});
+  if(bad){toast('Nilai tidak valid: '+bad,true);return;}
+  if(!Object.keys(vals).length){toast('Tidak ada perubahan');return;}
+  $('cf_save').disabled=true;
+  saveAndReload({action:'config',values:vals},'Target tersimpan').then(function(ok){if(!ok){var e=$('cf_save');if(e)e.disabled=false;}});
+}
+
+// ═════════════ CREATIVE (Brand Creator) ═════════════
+function setCcat(v){S.ccat=v;render();}
+function vCreative(){
+  var h='<div class="row" style="margin-bottom:12px"><div class="mid">Creative</div>'+(can('creator')&&!S.cf?'<button class="btn s sp" onclick="cfOpen(\'\')">+ Input creative</button>':'')+'</div>';
+  if(!can('creator'))h+=note('Tab ini untuk Brand Creator. Anda bisa melihat, tidak bisa mengubah.');
+  if(S.cf)h+=cfForm();
+  h+=chipsCat(S.ccat,'setCcat',[['all','Semua'],['pen','Penjualan'],['awon','Awareness Online'],['awoff','Awareness Offline']]);
+  var list=D.creatives.filter(function(c){return S.ccat==='all'||(S.ccat==='pen'&&c.kategori==='Penjualan')||(S.ccat==='awon'&&c.kategori==='Awareness'&&isOn(c))||(S.ccat==='awoff'&&!isOn(c));})
+    .sort(function(a,b){return a.created<b.created?1:-1;});
+  if(!list.length)return h+'<div class="card"><div class="empty">Belum ada creative'+(S.ccat!=='all'?' di kategori ini':'')+'.</div></div>';
+  h+='<div class="card">'+list.map(function(c){
+    var s=crStatus(c);
+    return '<div class="item"><div class="cr">'+thumb(c)+'<div class="bd"><div class="kr-t">'+esc(c.nama)+'</div>'+tagsOf(c)+
+      '<span class="tag '+s.t+'">'+s.x+'</span><div class="sm mut" style="margin-top:6px">Oleh '+esc(c.by)+' · '+dLabel((c.created||'').slice(0,10))+'</div>'+
+      (c.catatan?'<div class="sm" style="margin-top:4px">'+esc(c.catatan)+'</div>':'')+links(c)+
+      (can('creator')?'<div class="acts"><button class="btn s ghost" onclick="cfOpen(\''+c.id+'\')">Ubah</button><button class="btn s danger" onclick="cfDelete(\''+c.id+'\')">Hapus</button></div>':'')+
+    '</div></div></div>';}).join('')+'</div>';
+  return h;
+}
+function cfOpen(id){
+  var c=id?creativeOf(id):null;
+  S.cf=c?{id:c.id,nama:c.nama,kat:c.kategori,med:c.medium,cat:c.catatan,link:c.link,keep:c.file,file:null,drop:false,locked:tayOf(c.id).length>0,origMed:c.medium}
+        :{id:uid('c'),nama:'',kat:'',med:'',cat:'',link:'',keep:null,file:null,drop:false,locked:false};
+  render();window.scrollTo(0,0);
+}
+function cfSync(){var f=S.cf;if(!f||!$('cf_nama'))return;f.nama=$('cf_nama').value;f.cat=$('cf_cat').value;f.link=$('cf_link').value;}
+function cfSet(k,v){
+  cfSync();
+  if(k==='kat'){if(v==='Penjualan')S.cf.med='Online';else if(S.cf.kat!=='Awareness')S.cf.med='';}
+  S.cf[k]=v;render();
+}
+function cfForm(){
+  var f=S.cf,isNew=!creativeOf(f.id);
+  var fileLine=f.file?'<div class="sm" style="margin-top:6px">📎 '+esc(f.file.name)+' · '+fSize(f.file.size)+' · <a href="#" onclick="cfNoFile();return false">batal pilih</a></div>'
+    :(f.keep&&!f.drop?'<div class="sm" style="margin-top:6px">📎 '+esc(f.keep.name)+' · '+fSize(f.keep.size)+' · tersimpan · <a href="#" onclick="cfDrop();return false">hapus file</a></div>':'');
+  return '<div class="card" style="border-color:var(--m-b)"><div class="h">'+(isNew?'Creative baru':'Ubah creative')+'</div>'+
+    '<label class="lbl">Nama file *</label><input class="inp" id="cf_nama" maxlength="120" value="'+esc(f.nama)+'" placeholder="mis. Reels Promo Baja Ringan v2">'+
+    '<label class="lbl">Kategori *</label><div class="chips" style="margin-bottom:0"><button class="chip '+(f.kat==='Penjualan'?'on':'')+'" onclick="cfSet(\'kat\',\'Penjualan\')">Iklan Penjualan</button><button class="chip '+(f.kat==='Awareness'?'on':'')+'" onclick="cfSet(\'kat\',\'Awareness\')">Awareness</button></div>'+
+    (f.kat==='Awareness'?'<label class="lbl">Awareness ini untuk *</label><div class="chips" style="margin-bottom:0"><button class="chip '+(f.med==='Online'?'on':'')+'" '+(f.locked&&f.origMed!=='Online'?'disabled':'')+' onclick="cfSet(\'med\',\'Online\')">Online (diiklankan)</button><button class="chip '+(f.med==='Offline'?'on':'')+'" '+(f.locked&&f.origMed!=='Offline'?'disabled':'')+' onclick="cfSet(\'med\',\'Offline\')">Offline (dipasang)</button></div>'+(f.locked?'<div class="sm mut" style="margin-top:6px">Online/Offline terkunci karena sudah ada tayang/penempatan.</div>':''):'')+
+    (f.kat==='Penjualan'?'<div class="sm mut" style="margin-top:6px">Iklan Penjualan selalu Online.</div>':'')+
+    '<label class="lbl">Upload file (gambar, video MP4/MOV, atau PDF; maks 20 MB)</label>'+
+    '<input type="file" id="cf_file" style="display:none" accept=".jpg,.jpeg,.png,.webp,.gif,.mp4,.mov,.pdf" onchange="cfPick(this)">'+
+    '<button class="btn s ghost" type="button" onclick="$(\'cf_file\').click()">📎 Pilih file</button>'+fileLine+
+    '<label class="lbl">Link (opsional, untuk video lebih dari 20 MB: upload ke Drive lalu tempel link)</label><input class="inp" id="cf_link" value="'+esc(f.link)+'" placeholder="https://…">'+
+    '<label class="lbl">Catatan (opsional)</label><textarea class="ta" id="cf_cat" maxlength="500">'+esc(f.cat)+'</textarea>'+
+    '<button class="btn" id="cf_save" onclick="cfSave()">Simpan creative</button><button class="btn ghost" onclick="S.cf=null;render()">Batal</button></div>';
+}
+function cfPick(inp){
+  var f=inp.files&&inp.files[0];inp.value='';if(!f||!S.cf)return;
+  var m=/\.([a-z0-9]{2,5})$/i.exec(f.name),ext=m?m[1].toLowerCase():'';
+  if(!UP_EXT[ext]){toast('Jenis file tidak didukung (boleh: JPG, PNG, WebP, GIF, MP4, MOV, PDF)',true);return;}
+  if(f.size===0){toast('File kosong',true);return;}
+  if(f.size>UP_MAX){toast('File '+fSize(f.size)+' melebihi 20 MB. Upload ke Drive, lalu tempel linknya di kolom Link.',true);return;}
+  cfSync();S.cf.file={blob:f,name:f.name,size:f.size,done:null};render();
+}
+function cfNoFile(){cfSync();S.cf.file=null;render();}
+function cfDrop(){cfSync();S.cf.drop=true;render();}
+function attRead(blob){return new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(String(r.result).split(',')[1]||'');};r.onerror=function(){rej(new Error('file tidak bisa dibaca'));};r.readAsDataURL(blob);});}
+function cfSave(){
+  cfSync();var f=S.cf,b=$('cf_save');
+  if(!f.nama.trim()){toast('Nama file wajib diisi',true);return;}
+  if(!f.kat){toast('Pilih kategori: Iklan Penjualan atau Awareness',true);return;}
+  if(f.kat==='Awareness'&&!f.med){toast('Pilih Awareness ini untuk Online atau Offline',true);return;}
+  b.disabled=true;
+  var p={action:'creative',id:f.id,nama:f.nama.trim(),kategori:f.kat,medium:f.kat==='Penjualan'?'Online':f.med,catatan:f.cat.trim(),link:f.link.trim()};
+  var pre=Promise.resolve();
+  if(f.file&&!f.file.done){
+    b.textContent='Mengunggah file… jangan tutup app';
+    pre=attRead(f.file.blob).then(function(d){return apiPost({action:'upload',name:f.file.name,data:d});}).then(function(j){f.file.done=j.file;if(j.shared===false)toast('File terunggah, tapi Drive menolak membagikan link. Advertiser mungkin tidak bisa membukanya.',true);});
+  }
+  pre.then(function(){
+    b.textContent='Menyimpan…';
+    if(f.file)p.file=f.file.done;else if(f.drop)p.file=null;
+    return saveAndReload(p,'Creative tersimpan');
+  },function(e){
+    var m=String(e&&e.message||e);
+    toast(/tidak dikenal/.test(m)?'Server belum diperbarui: deploy ulang Apps Script terbaru.':'Gagal mengunggah file: '+m+'. Creative BELUM tersimpan, isian aman.',true);return false;
+  }).then(function(ok){
+    if(ok){S.cf=null;render();return;}
+    var e=$('cf_save');if(e){e.disabled=false;e.textContent='Simpan creative';}
+  });
+}
+function cfDelete(id){
+  var c=creativeOf(id);if(!c)return;
+  if(!confirm('Hapus creative "'+c.nama+'"? Tidak bisa dihapus kalau masih ada tayang/penempatan.'))return;
+  saveAndReload({action:'creativeDelete',id:id},'Creative dihapus');
+}
+
+// ═════════════ ADVERTISER ═════════════
+function edOpen(o){S.ed=o;render();var e=$('edbox');if(e)e.scrollIntoView({block:'center'});}
+function edClose(){S.ed=null;render();}
+function edSync(){
+  var e=S.ed;if(!e)return;
+  if($('ed_mulai'))e.mulai=$('ed_mulai').value;
+  if($('ed_selesai'))e.selesai=$('ed_selesai').value;
+  if($('ed_jenis'))e.jenis=$('ed_jenis').value;
+  if($('ed_jx'))e.jx=$('ed_jx').value;
+  if($('ed_hasil'))e.hasil=$('ed_hasil').value;
+  if($('ed_spend'))e.spend=$('ed_spend').value;
+  if($('ed_lokasi'))e.lokasi=$('ed_lokasi').value;
+  if($('ed_cat'))e.catatan=$('ed_cat').value;
+}
+function vAdv(){
+  var h='<div class="mid" style="margin-bottom:12px">Advertiser</div>';
+  if(!can('adv'))h+=note('Tab ini untuk Advertiser. Anda bisa melihat, tidak bisa mengubah.');
+  var on=D.creatives.filter(isOn),off=D.creatives.filter(function(c){return !isOn(c);});
+  var queue=on.filter(function(c){return !tayOf(c.id).length;}).sort(function(a,b){return a.created<b.created?-1:1;});
+  var live=on.filter(function(c){return tayOf(c.id).length;}).sort(function(a,b){return tayOf(b.id)[0].mulai<tayOf(a.id)[0].mulai?-1:1;});
+  h+='<div class="card"><div class="h">Antrean · belum tayang ('+queue.length+')</div>';
+  if(!queue.length)h+='<div class="empty">Tidak ada antrean. Semua creative online sudah punya jadwal tayang.</div>';
+  queue.forEach(function(c){
+    var age=dDiff((c.created||TD()).slice(0,10),TD());
+    h+='<div class="item"><div class="cr">'+thumb(c)+'<div class="bd"><div class="kr-t">'+esc(c.nama)+'</div>'+tagsOf(c)+'<div class="sm mut">Masuk '+(age<=0?'hari ini':age+' hari lalu')+' · oleh '+esc(c.by)+'</div>'+links(c)+
+      (can('adv')?'<div class="acts"><button class="btn s" onclick="edOpen({type:\'tayang\',cid:\''+c.id+'\',id:\'\',mulai:\''+TD()+'\',selesai:\'\'})">Atur tayang</button></div>':'')+
+      edBoxFor(c.id,'')+'</div></div></div>';
+  });
+  h+='</div>';
+  h+='<div class="card"><div class="h">Tayang & Hasil ('+live.length+' creative)</div>';
+  if(!live.length)h+='<div class="empty">Belum ada tayang.</div>';
+  live.forEach(function(c){
+    h+='<div class="item"><div class="cr">'+thumb(c)+'<div class="bd"><div class="kr-t">'+esc(c.nama)+'</div>'+tagsOf(c)+links(c)+'</div></div>';
+    tayOf(c.id).forEach(function(t){h+=tayRow(c,t);});
+    if(can('adv'))h+='<div class="acts"><button class="btn s ghost" onclick="edOpen({type:\'tayang\',cid:\''+c.id+'\',id:\'\',mulai:\''+TD()+'\',selesai:\'\'})">+ Tayang baru</button></div>'+edBoxFor(c.id,'');
+    h+='</div>';
+  });
+  h+='</div>';
+  h+='<div class="card"><div class="h">Penempatan offline ('+off.length+' creative)</div>';
+  if(!off.length)h+='<div class="empty">Belum ada creative Awareness Offline.</div>';
+  off.forEach(function(c){
+    var s=crStatus(c);
+    h+='<div class="item"><div class="cr">'+thumb(c)+'<div class="bd"><div class="kr-t">'+esc(c.nama)+'</div><span class="tag '+s.t+'">'+s.x+'</span>'+links(c)+'</div></div>';
+    tayOf(c.id).forEach(function(t){
+      h+='<div class="tr"><div class="row"><b class="sm">'+esc(t.lokasi)+'</b><span class="tag '+(t.pasang==='Sudah'?'ok':'warn')+' sp">'+(t.pasang==='Sudah'?'Sudah dipasang':'Belum dipasang')+'</span></div>'+
+        (t.mulai?'<div class="sm mut">'+(t.pasang==='Sudah'?'Dipasang ':'Rencana ')+dLabel(t.mulai)+'</div>':'')+(t.catatan?'<div class="sm">'+esc(t.catatan)+'</div>':'')+
+        ((can('adv')||can('creator'))?'<div class="acts"><button class="btn s ghost" onclick="offOpen(\''+t.id+'\')">Ubah</button><button class="btn s danger" onclick="tDel(\''+t.id+'\')">Hapus</button></div>':'')+edBoxFor(c.id,t.id)+'</div>';
+    });
+    if(can('adv')||can('creator'))h+='<div class="acts"><button class="btn s ghost" onclick="edOpen({type:\'offline\',cid:\''+c.id+'\',id:\'\',lokasi:\'\',pasang:\'Belum\',mulai:\'\',catatan:\'\'})">+ Tambah penempatan</button></div>'+edBoxFor(c.id,'');
+    h+='</div>';
+  });
+  return h+'</div>';
+}
+function tayRow(c,t){
+  var st=tStatus(t),stT=st==='Berjalan'?'ok':st==='Selesai'?'brand':'warn',d=tDays(t);
+  var per=dLabel(t.mulai)+' → '+(t.selesai?dLabel(t.selesai):'sekarang')+(st==='Terjadwal'?'':' · '+d+' hari');
+  var info=t.jenis?jenisInfo(t.jenis):null,cost=info&&t.hasil!=null?costOf(t.spend,t.hasil,info):null;
+  var hs;
+  if(st==='Terjadwal')hs='<div class="sm mut">🔒 Hasil terkunci sampai iklan mulai tayang ('+dLabel(t.mulai)+').</div>';
+  else if(t.hasil==null)hs='<div class="sm" style="color:var(--warn);font-weight:700">Hasil belum diisi.</div>';
+  else{var v=verdict({spend:t.spend,hasil:t.hasil,cost:cost,info:info});
+    hs='<div class="sm"><b>'+n0(t.hasil)+'</b> '+esc(info.k)+' · belanja <b>'+rp(t.spend)+'</b> · biaya <b>'+(cost==null?'—':rp(cost))+'</b> <span class="mut">'+esc(info.u)+'</span> <span class="tag '+v.t+'">'+v.x+'</span></div>'+
+      '<div class="sm mut">Diperbarui '+dLabel((t.hasilTs||'').slice(0,10))+'</div>';}
+  var acts='';
+  if(can('adv')){
+    acts='<div class="acts">'+(st==='Terjadwal'?'':'<button class="btn s" onclick="hasilOpen(\''+t.id+'\')">'+(t.hasil==null?'Isi Hasil':'Ubah Hasil')+'</button>')+
+      '<button class="btn s ghost" onclick="edOpen({type:\'tayang\',cid:\''+c.id+'\',id:\''+t.id+'\',mulai:\''+t.mulai+'\',selesai:\''+t.selesai+'\'})">Ubah periode</button>'+
+      (st==='Berjalan'&&!t.selesai?'<button class="btn s ghost" onclick="tStop(\''+t.id+'\')">Hentikan hari ini</button>':'')+
+      '<button class="btn s danger" onclick="tDel(\''+t.id+'\')">Hapus</button></div>';
+  }
+  return '<div class="tr"><div class="row"><b class="sm">'+per+'</b><span class="tag '+stT+' sp">'+st+'</span></div>'+hs+acts+edBoxFor(c.id,t.id)+'</div>';
+}
+// kotak edit muncul tepat di bawah item yang sedang diedit
+function edBoxFor(cid,tid){
+  var e=S.ed;if(!e||e.cid!==cid||(e.id||'')!==(tid||''))return '';
+  if(e.type==='tayang')return '<div class="fbox" id="edbox"><div class="h">'+(e.id?'Ubah periode tayang':'Atur tayang')+'</div>'+
+    '<div class="grid2"><div><label class="lbl">Mulai tayang *</label><input class="inp" type="date" id="ed_mulai" value="'+esc(e.mulai)+'"></div><div><label class="lbl">Selesai (kosong = masih jalan)</label><input class="inp" type="date" id="ed_selesai" value="'+esc(e.selesai)+'"></div></div>'+
+    '<div class="sm mut" style="margin-top:8px">Hasil baru bisa diisi setelah tanggal mulai tiba.</div>'+
+    '<button class="btn" id="ed_save" onclick="saveTayang()">Simpan</button><button class="btn ghost" onclick="edClose()">Batal</button></div>';
+  if(e.type==='offline')return '<div class="fbox" id="edbox"><div class="h">'+(e.id?'Ubah penempatan':'Penempatan baru')+'</div>'+
+    '<label class="lbl">Lokasi / cara distribusi *</label><input class="inp" id="ed_lokasi" maxlength="100" value="'+esc(e.lokasi)+'" placeholder="mis. Perempatan Beran, Ngawi">'+
+    '<label class="lbl">Status *</label><div class="chips" style="margin-bottom:0"><button class="chip '+(e.pasang==='Belum'?'on':'')+'" onclick="edSync();S.ed.pasang=\'Belum\';render()">Belum dipasang</button><button class="chip '+(e.pasang==='Sudah'?'on':'')+'" onclick="edSync();S.ed.pasang=\'Sudah\';render()">Sudah dipasang / didistribusikan</button></div>'+
+    '<label class="lbl">Tanggal '+(e.pasang==='Sudah'?'pemasangan *':'rencana (opsional)')+'</label><input class="inp" type="date" id="ed_mulai" value="'+esc(e.mulai)+'">'+
+    '<button class="btn" id="ed_save" onclick="saveOffline()">Simpan</button><button class="btn ghost" onclick="edClose()">Batal</button></div>';
+  if(e.type==='hasil'){
+    var isX=e.jenis==='__x';
+    return '<div class="fbox" id="edbox"><div class="h">Hasil dari Meta · '+esc(dLabel(e.mulai))+' → '+(e.selesai?esc(dLabel(e.selesai)):'sekarang')+'</div>'+
+      '<div class="note warn" style="margin:0 0 10px"><span>⚠️</span><span>Isi <b>total sejak mulai tayang</b>, bukan angka per hari. Di Meta Ads Manager, atur rentang tanggal <b>sama persis</b> dengan periode tayang ini, lalu salin kolom <b>Hasil</b> dan <b>Jumlah yang dibelanjakan</b>.</span></div>'+
+      '<label class="lbl">Jenis hasil (lihat keterangan di bawah angka Hasil di Meta) *</label><select class="sel" id="ed_jenis" onchange="edSync();render()">'+
+      JENIS.map(function(j){return '<option value="'+esc(j.k)+'"'+(e.jenis===j.k?' selected':'')+'>'+esc(j.k)+'</option>';}).join('')+'<option value="__x"'+(isX?' selected':'')+'>Lainnya (ketik sendiri)…</option></select>'+
+      (isX?'<input class="inp" style="margin-top:8px" id="ed_jx" maxlength="40" value="'+esc(e.jx||'')+'" placeholder="mis. Pembelian, Tayangan video 3 detik">':'')+
+      '<div class="grid2"><div><label class="lbl">Hasil *</label><input class="inp" type="number" inputmode="numeric" min="0" step="1" id="ed_hasil" value="'+esc(e.hasil)+'" oninput="hasilLive()"></div>'+
+      '<div><label class="lbl">Dibelanjakan (Rp) *</label><input class="inp" type="number" inputmode="numeric" min="0" step="1" id="ed_spend" value="'+esc(e.spend)+'" oninput="hasilLive()"></div></div>'+
+      '<div class="pv" id="ed_pv">—</div>'+
+      '<button class="btn" id="ed_save" onclick="saveHasil()">Simpan Hasil</button><button class="btn ghost" onclick="edClose()">Batal</button></div>';
+  }
+  return '';
+}
+function hasilLive(){
+  var el=$('ed_pv');if(!el||!$('ed_hasil'))return;
+  var j=$('ed_jenis').value==='__x'?($('ed_jx')?$('ed_jx').value:''):$('ed_jenis').value,info=jenisInfo(j);
+  var h=$('ed_hasil').value,s=$('ed_spend').value;
+  if(h===''||s===''||isNaN(+h)||isNaN(+s)){el.textContent='Biaya per hasil akan dihitung otomatis.';return;}
+  var c=costOf(+s,+h,info);
+  el.textContent=c==null?'Hasil 0: biaya per hasil belum bisa dihitung.':'Biaya per hasil: '+rp(c)+' '+info.u+' (cocokkan dengan Meta)';
+}
+function hasilOpen(tid){
+  var t=D.tayang.filter(function(x){return x.id===tid;})[0];if(!t)return;
+  var known=t.jenis&&JENIS.some(function(j){return j.k.toLowerCase()===t.jenis.toLowerCase();});
+  var jk=known?jenisInfo(t.jenis).k:(t.jenis?'__x':JENIS[0].k);
+  edOpen({type:'hasil',cid:t.cid,id:t.id,mulai:t.mulai,selesai:t.selesai,jenis:jk,jx:known?'':(t.jenis||''),hasil:t.hasil==null?'':String(t.hasil),spend:t.spend==null?'':String(t.spend)});
+}
+function offOpen(tid){
+  var t=D.tayang.filter(function(x){return x.id===tid;})[0];if(!t)return;
+  edOpen({type:'offline',cid:t.cid,id:t.id,lokasi:t.lokasi,pasang:t.pasang||'Belum',mulai:t.mulai,catatan:t.catatan||''});
+}
+function tPayload(t,extra){return Object.assign({action:'tayang',id:t.id,cid:t.cid,mulai:t.mulai,selesai:t.selesai||''},extra||{});}
+function saveTayang(){
+  edSync();var e=S.ed;
+  if(!e.mulai){toast('Tanggal mulai tayang wajib diisi',true);return;}
+  if(e.selesai&&e.selesai<e.mulai){toast('Tanggal selesai tidak boleh sebelum mulai',true);return;}
+  $('ed_save').disabled=true;
+  saveAndReload({action:'tayang',id:e.id||uid('t'),cid:e.cid,mulai:e.mulai,selesai:e.selesai||''},'Tayang tersimpan').then(function(ok){if(ok){S.ed=null;render();}else{var b=$('ed_save');if(b)b.disabled=false;}});
+}
+function saveHasil(){
+  edSync();var e=S.ed;
+  var j=e.jenis==='__x'?String(e.jx||'').trim():e.jenis;
+  if(!j){toast('Isi jenis hasil',true);return;}
+  if(e.hasil===''||e.spend===''){toast('Hasil dan Dibelanjakan wajib diisi (isi 0 kalau memang 0)',true);return;}
+  if(!/^\d+$/.test(String(e.hasil))||!/^\d+$/.test(String(e.spend))){toast('Hasil dan Dibelanjakan harus bilangan bulat tanpa titik/koma',true);return;}
+  $('ed_save').disabled=true;
+  saveAndReload({action:'tayang',id:e.id,cid:e.cid,mulai:e.mulai,selesai:e.selesai||'',jenis:j,hasil:+e.hasil,spend:+e.spend},'Hasil tersimpan').then(function(ok){if(ok){S.ed=null;render();}else{var b=$('ed_save');if(b)b.disabled=false;}});
+}
+function saveOffline(){
+  edSync();var e=S.ed;
+  if(!String(e.lokasi||'').trim()){toast('Isi lokasi / cara distribusi',true);return;}
+  if(e.pasang==='Sudah'&&!e.mulai){toast('Isi tanggal pemasangan',true);return;}
+  $('ed_save').disabled=true;
+  saveAndReload({action:'tayang',id:e.id||uid('t'),cid:e.cid,lokasi:e.lokasi.trim(),pasang:e.pasang,mulai:e.mulai||''},'Penempatan tersimpan').then(function(ok){if(ok){S.ed=null;render();}else{var b=$('ed_save');if(b)b.disabled=false;}});
+}
+function tStop(id){
+  var t=D.tayang.filter(function(x){return x.id===id;})[0];if(!t)return;
+  if(!confirm('Hentikan tayang ini hari ini ('+dLabel(TD())+')?'))return;
+  saveAndReload(tPayload(t,{selesai:TD()}),'Tayang dihentikan');
+}
+function tDel(id){
+  if(!confirm('Hapus data ini? Hasil yang sudah diisi ikut hilang dari dashboard.'))return;
+  saveAndReload({action:'tayangDelete',id:id},'Dihapus');
+}
+
+// ═════════════ INIT ═════════════
+(function(){
+  S.ok=ls('bc_pin_ok')==='1';S.who=ls('bc_who')||'';
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(function(){});
+  start();
+})();
+</script>
+</body>
+</html>
