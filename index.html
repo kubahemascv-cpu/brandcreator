@@ -39,11 +39,13 @@ button,input,select,textarea{font-family:var(--font)}
 .mid{font-size:22px;font-weight:800;letter-spacing:-.01em;line-height:1.15}
 .sm{font-size:12px;line-height:1.55}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:6px}
+
+.stat .sub{display:block;font-size:10px;line-height:1.45;color:rgba(255,255,255,.55);font-weight:600;margin-top:4px}
 .stat b{display:block;font-size:26px;font-weight:800;color:var(--m);line-height:1.05}.stat span{font-size:10.5px;color:rgba(255,255,255,.65);font-weight:600}
 .row{display:flex;align-items:center;gap:10px}
 .sp{margin-left:auto}
 .tag{display:inline-block;font-size:10.5px;font-weight:800;padding:4px 9px;border-radius:99px;white-space:nowrap}
-.tag.ok{background:var(--ok-l);color:var(--ok)}.tag.warn{background:var(--warn-l);color:var(--warn)}.tag.bad{background:var(--bad-l);color:var(--bad)}.tag.na{background:var(--bg2);color:var(--mut)}.tag.brand{background:var(--m-l);color:var(--m-d)}
+.tag.ok{background:var(--ok-l);color:var(--ok)}.tag.warn{background:var(--warn-l);color:var(--warn)}.tag.bad{background:var(--bad-l);color:var(--bad)}.tag.na{background:var(--bg2);color:var(--mut)}.tag.brand{background:var(--m-l);color:var(--m-d)}.tag.dv{background:var(--ch);color:var(--m)}
 .tags{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
 .note{display:flex;gap:10px;font-size:12px;line-height:1.55;padding:11px 13px;border-radius:13px;background:var(--card2);border:1px solid var(--bdr);margin-bottom:14px;color:var(--txt2)}
 .note.warn{background:var(--warn-l);border-color:#F6D8A8;color:#7C4A03}
@@ -72,6 +74,13 @@ tr:last-child td{border-bottom:none}
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .chip{border:1.5px solid var(--bdr);background:var(--card);border-radius:99px;padding:9px 15px;font-size:12.5px;font-weight:700;color:var(--txt2);cursor:pointer}
 .chip.on{background:var(--ch);color:var(--m);border-color:var(--ch)}
+.chip.xs{padding:6px 12px;font-size:11.5px}
+.dvh{font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--m-d);margin:18px 0 8px}
+.ctrl{font-size:12px;font-weight:700;color:var(--txt2);margin-top:4px}
+.ctrl b{font-size:15px;color:var(--m-d)}
+.tgt .bar{height:8px;border-radius:99px;background:var(--bg2);overflow:hidden;margin-top:8px}
+.tgt .bar>i{display:block;height:100%;border-radius:99px;background:var(--m)}
+.tgt .fr{font-size:22px;font-weight:800;line-height:1}.tgt .fr small{font-size:13px;color:var(--mut);font-weight:700}
 .nav{position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(255,255,255,.95);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--bdr);padding:8px 8px max(8px,env(safe-area-inset-bottom))}
 .nav-in{max-width:760px;margin:0 auto;display:flex;gap:2px}
 .nav button{flex:1;border:none;background:none;padding:7px 2px;border-radius:12px;font-size:10.5px;font-weight:700;color:var(--mut);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
@@ -157,20 +166,20 @@ input[type=date]::-webkit-date-and-time-value{text-align:left;min-width:0}
 <script>
 // ═════════════ KONFIGURASI ═════════════
 var APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbx7fvep5uCT_s_RUYbbcv4liCG0jRq5z53kzmz9BaL3QDTw2dI2PfZGo00UHhHnIPu0/exec';
-var PIN='1601';
 var PEOPLE={
-  Lukman:{role:'Advertiser',creator:true,adv:true},
+  Lukman:{role:'Manager · Advertiser',creator:true,adv:true,mgr:true},
   Dicky:{role:'Brand Creator',creator:true}
 };
 // "Hasil" mengikuti kolom Hasil di Meta Ads Manager (jenisnya tergantung objektif kampanye)
 var JENIS=['Percakapan WA','ThruPlay','Klik tautan','Jangkauan'];
 var KATS=['Awareness Online','Awareness Offline','Iklan Penjualan'];
+var DIVISI=['Kubah Emas','Kumasindo'];
 function isOff(c){return c.kategori==='Awareness Offline';}   // creative offline tidak diiklankan: tidak punya tayang/Hasil
 var MONTH_ID=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 
 // ═════════════ UTIL ═════════════
-var S={ok:false,who:'',tab:'dash',loaded:false,err:'',kf:'',cf:null,ed:null};
-var D={creatives:[],tayang:[],today:''};
+var S={ok:true,who:'',tab:'dash',loaded:false,err:'',kf:'',cdv:'',af:'',sort:{},mt:null,cf:null,ed:null};
+var D={creatives:[],tayang:[],targets:[],today:'',month:''};
 function $(id){return document.getElementById(id);}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v);}catch(e){return null;}}
@@ -188,18 +197,18 @@ function note(t,type){return '<div class="note '+(type||'')+'"><span>'+(type==='
 // ═════════════ API ═════════════
 function apiReady(){return APPS_SCRIPT_URL&&APPS_SCRIPT_URL.indexOf('PASTE_')!==0;}
 function apiLoad(){
-  return fetch(APPS_SCRIPT_URL+'?action=load&pin='+encodeURIComponent(PIN)+'&cb='+Date.now()).then(function(r){return r.json();}).then(function(j){
+  return fetch(APPS_SCRIPT_URL+'?action=load&cb='+Date.now()).then(function(r){return r.json();}).then(function(j){
     if(!j.ok)throw new Error(j.error||'Server menolak permintaan');
-    D={creatives:j.creatives||[],tayang:j.tayang||[],today:j.today||''};
+    D={creatives:j.creatives||[],tayang:j.tayang||[],targets:j.targets||[],today:j.today||'',month:j.month||''};
   });
 }
 function apiPost(p){
-  return fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({pin:PIN,by:S.who},p))})
+  return fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({by:S.who},p))})
     .then(function(r){return r.json();}).then(function(j){if(!j.ok)throw new Error(j.error||'Gagal menyimpan');return j;});
 }
 function saveAndReload(p,okMsg){
   return apiPost(p).then(function(){return apiLoad();}).then(function(){toast(okMsg||'Tersimpan');render();return true;})
-    .catch(function(e){var m=String(e.message||e);if(/tidak dikenal/.test(m))m='Server belum diperbarui: deploy ulang Apps Script terbaru.';toast(m,true);return false;});
+    .catch(function(e){var m=String(e.message||e);if(/tidak dikenal|PIN salah/.test(m))m='Server belum diperbarui: deploy ulang Apps Script terbaru.';toast(m,true);return false;});
 }
 
 // ═════════════ DATA TURUNAN ═════════════
@@ -240,6 +249,7 @@ function campData(){
     c.unscored=c.all.filter(function(x){return !scored[x.id];}).sort(function(a,b){return a.nama<b.nama?-1:1;});
     return c;
   });
+  addCtrLists(list);
   list.sort(function(a,b){
     if(!!a.garr.length!==!!b.garr.length)return a.garr.length?-1:1;
     for(var i=0;i<jorder.length;i++){var x=(a.groups[jorder[i]]||{total:0}).total,y=(b.groups[jorder[i]]||{total:0}).total;if(x!==y)return y-x;}
@@ -247,29 +257,47 @@ function campData(){
   });
   return list;
 }
-function katCounts(){var n={},none=0;KATS.forEach(function(k){n[k]=0;});D.creatives.forEach(function(c){if(n[c.kategori]!==undefined)n[c.kategori]++;else none++;});return {n:n,none:none};}
+function ctrFmt(x){return x.toLocaleString('id-ID',{minimumFractionDigits:0,maximumFractionDigits:2})+'%';}
+// CTR tidak bisa dijumlahkan antar tayang: yang dipakai = CTR dari tayang TERBARU yang CTR-nya sudah diisi
+function ctrOf(cid){var ts=tayOf(cid);for(var i=0;i<ts.length;i++)if(ts[i].ctr!=null)return ts[i].ctr;return null;}
+function hasilStr(cid){var sum={};tayOf(cid).forEach(function(t){if(t.jenis&&t.hasil!=null){var j=jenisLabel(t.jenis);sum[j]=(sum[j]||0)+t.hasil;}});return Object.keys(sum).map(function(j){return '<b>'+n0(sum[j])+'</b> '+esc(j);}).join(' · ');}
+function hasilTot(cid){var n=0;tayOf(cid).forEach(function(t){if(t.hasil!=null)n+=t.hasil;});return n;}
+function addCtrLists(list){
+  list.forEach(function(c){
+    var a=c.all.map(function(x){return {c:x,ctr:ctrOf(x.id)};});
+    c.ctrList=a.filter(function(r){return r.ctr!=null;}).sort(function(p,q){return q.ctr-p.ctr||hasilTot(q.c.id)-hasilTot(p.c.id)||(p.c.nama<q.c.nama?-1:1);});
+    c.noCtr=a.filter(function(r){return r.ctr==null;}).map(function(r){return r.c;}).sort(function(p,q){return p.nama<q.nama?-1:1;});
+  });
+  return list;
+}
+// hitung jumlah creative: total, per kategori, per divisi, dan kategori x divisi
+function tally(list){
+  var t={total:list.length,div:{},kat:{},nodiv:0,nokat:0};
+  DIVISI.forEach(function(d){t.div[d]=0;});
+  KATS.forEach(function(k){t.kat[k]={n:0,d:{}};DIVISI.forEach(function(d){t.kat[k].d[d]=0;});});
+  list.forEach(function(c){
+    var hd=t.div[c.divisi]!==undefined;if(hd)t.div[c.divisi]++;else t.nodiv++;
+    var kk=t.kat[c.kategori];if(kk){kk.n++;if(hd)kk.d[c.divisi]++;}else t.nokat++;
+  });
+  return t;
+}
+function MON(){return D.month||TD().slice(0,7);}
+function nextMon(m){var a=m.split('-'),y=+a[0],mo=+a[1]+1;if(mo>12){mo=1;y++;}return y+'-'+String(mo).padStart(2,'0');}
+function monLabel(m){var a=m.split('-');return MONTH_ID[+a[1]-1]+' '+a[0];}
+function tgtOf(m,k,d){var r=D.targets.filter(function(x){return x.bulan===m&&x.kategori===k&&x.divisi===d;})[0];return r?r.jumlah:null;}
+function hasTgt(m){return D.targets.some(function(x){return x.bulan===m;});}
+function inMonth(m){return D.creatives.filter(function(c){return (c.created||'').slice(0,7)===m;});}
 
 // ═════════════ SHELL ═════════════
-function gate(){
-  document.body.classList.remove('shell');$('top').style.display='none';$('nav').style.display='none';
-  $('view').innerHTML='<div class="gate"><div class="logo">BC</div><div class="mid" style="margin-bottom:6px">Brand Creator</div>'+
-    '<div class="sm mut" style="margin-bottom:22px">Masukkan PIN tim untuk membuka.</div>'+
-    '<input class="inp pin" id="pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off" onkeydown="if(event.key===\'Enter\')tryPin()">'+
-    '<div class="sm" id="pinerr" style="color:var(--bad);min-height:22px;margin-top:8px;font-weight:700"></div>'+
-    '<button class="btn" onclick="tryPin()">Buka</button></div>';
-  setTimeout(function(){var e=$('pin');if(e)e.focus();},50);
-}
-function tryPin(){var v=$('pin').value;if(v===PIN){S.ok=true;ls('bc_pin_ok','1');start();}else{$('pinerr').textContent='PIN salah.';$('pin').value='';}}
 function pickWho(){
   document.body.classList.remove('shell');$('top').style.display='none';$('nav').style.display='none';
   $('view').innerHTML='<div class="gate" style="margin-top:8vh"><div class="logo">BC</div><div class="mid" style="margin-bottom:6px">Siapa Anda?</div>'+
     '<div class="sm mut" style="margin-bottom:20px">Pilihan diingat di HP ini. Ini penanda, bukan verifikasi identitas.</div><div class="pick">'+
     Object.keys(PEOPLE).map(function(n){return '<button onclick="setWho(\''+n+'\')"><b>'+n+'</b><span>'+PEOPLE[n].role+'</span></button>';}).join('')+'</div></div>';
 }
-function setWho(n){S.who=n;ls('bc_who',n);S.tab='dash';S.cf=null;S.ed=null;start();}
+function setWho(n){S.who=n;ls('bc_who',n);S.tab='dash';S.cf=null;S.ed=null;S.mt=null;start();}
 function switchWho(){ls('bc_who',null);S.who='';pickWho();}
 function start(){
-  if(!S.ok){gate();return;}
   if(!S.who||!PEOPLE[S.who]){pickWho();return;}
   document.body.classList.add('shell');
   $('top').style.display='block';$('nav').style.display='block';$('whobtn').textContent=S.who+' ⇄';
@@ -277,16 +305,16 @@ function start(){
   $('view').innerHTML='<div class="spin">Memuat data…</div>';
   apiLoad().then(function(){S.loaded=true;S.err='';render();}).catch(function(e){
     var m=String(e.message||e);
-    if(/PIN salah/.test(m)){ls('bc_pin_ok',null);S.ok=false;gate();return;}
     S.err=m;render();
   });
 }
 function nav(){
-  var items=[['dash','📊','Dashboard'],['cr','🎨','Creative'],['adv','📣','Advertiser']];
+  var items=[['dash','📊','Dashboard'],['cr','🎨','Creative'],['adv','📣','Advertiser'],['mgr','🎯','Manager']];
   $('navin').innerHTML=items.map(function(i){return '<button class="'+(S.tab===i[0]?'on':'')+'" onclick="goTab(\''+i[0]+'\')"><span class="ic">'+i[1]+'</span>'+i[2]+'</button>';}).join('');
 }
-function goTab(t){S.tab=t;S.cf=null;S.ed=null;render();window.scrollTo(0,0);}
+function goTab(t){S.tab=t;S.cf=null;S.ed=null;S.mt=null;render();window.scrollTo(0,0);}
 function errHint(m){
+  if(/PIN salah/.test(m))return 'Apps Script yang ter-deploy masih versi lama (masih meminta PIN). Tempel kode Apps Script terbaru, lalu Deploy → Manage deployments → Edit → Version: <b>New</b> → Deploy.';
   if(/Masih versi lama|masih versi lama/.test(m))return 'Tab di Spreadsheet masih dari versi lama. <b>Hapus tab Creative, Tayang, dan Config</b> di Spreadsheet, lalu tekan Coba lagi (tab baru dibuat otomatis).';
   if(/Unexpected token|JSON|DOCTYPE|<html/i.test(m))return 'Server membalas halaman web, bukan data. Biasanya akses deploy belum <b>Anyone</b>, atau URL belum menunjuk ke versi terbaru. Di Apps Script: Deploy → Manage deployments → Edit → Version: <b>New</b> → Deploy, pastikan "Who has access" = Anyone, lalu pastikan URL yang dipakai berakhiran <b>/exec</b>.';
   if(/Failed to fetch|NetworkError|Load failed|network/i.test(m))return 'App tidak bisa menghubungi Apps Script. Cek koneksi internet. Kalau koneksi normal, biasanya akses deploy belum <b>Anyone</b> atau URL salah (harus berakhiran /exec).';
@@ -298,35 +326,74 @@ function render(){
   if(!S.ok||!S.who)return;
   nav();
   if(S.err&&!S.loaded){$('view').innerHTML='<div class="card fw"><div class="mid" style="margin-bottom:8px">Gagal memuat data</div><div class="sm" style="margin-bottom:8px;font-weight:700;color:var(--bad)">'+esc(S.err)+'</div><div class="sm mut" style="margin-bottom:6px">'+errHint(String(S.err))+'</div><button class="btn" onclick="start()">Coba lagi</button></div>';return;}
-  $('view').innerHTML=S.tab==='cr'?vCreative():S.tab==='adv'?vAdv():vDash();
+  $('view').innerHTML=S.tab==='cr'?vCreative():S.tab==='adv'?vAdv():S.tab==='mgr'?vMgr():vDash();
 }
 
 // ═════════════ DASHBOARD ═════════════
+var CK=[];
+function setSort(i,m){S.sort[CK[i]]=m;render();}
+function divSub(d){return DIVISI.map(function(x){return esc(x)+' '+d[x];}).join(' · ');}
 function vDash(){
-  var kc=katCounts(),h='';
-  var cols=KATS.length+(kc.none?1:0);
-  h+='<div class="card hero"><div class="h">Creative yang sudah dibuat</div><div class="heroNum">'+D.creatives.length+'</div>'+
-    '<div class="stats" style="grid-template-columns:repeat('+cols+',1fr);margin-top:16px">'+KATS.map(function(k){return '<div class="stat"><b>'+kc.n[k]+'</b><span>'+esc(k)+'</span></div>';}).join('')+
-    (kc.none?'<div class="stat"><b>'+kc.none+'</b><span>Belum dikategorikan</span></div>':'')+'</div></div>';
+  var h='',tl=tally(D.creatives),m=MON(),tm=tally(inMonth(m));
+  // 1. akumulasi seluruh creative yang pernah dibuat, per kategori dan per divisi
+  var hero='<div class="card hero"><div class="h">Creative yang sudah dibuat · akumulasi</div><div class="heroNum">'+tl.total+'</div>'+
+    '<div class="stats" style="grid-template-columns:repeat('+(DIVISI.length+(tl.nodiv?1:0))+',1fr);margin-top:16px">'+
+    DIVISI.map(function(d){return '<div class="stat"><b>'+tl.div[d]+'</b><span>'+esc(d)+'</span></div>';}).join('')+(tl.nodiv?'<div class="stat"><b>'+tl.nodiv+'</b><span>Belum ada divisi</span></div>':'')+'</div>'+
+    '<div class="stats" style="grid-template-columns:repeat('+(KATS.length+(tl.nokat?1:0))+',1fr);margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.14)">'+
+    KATS.map(function(k){return '<div class="stat"><b>'+tl.kat[k].n+'</b><span>'+esc(k)+'</span><span class="sub">'+divSub(tl.kat[k].d)+'</span></div>';}).join('')+
+    (tl.nokat?'<div class="stat"><b>'+tl.nokat+'</b><span>Belum dikategorikan</span></div>':'')+'</div></div>';
+  // 2. progres bulan ini terhadap target Manager
+  var tg='<div class="card tgt"><div class="h">Bulan ini · '+esc(monLabel(m))+'</div>';
+  if(!hasTgt(m)){
+    tg+='<div class="mid" style="font-size:20px">'+tm.total+' creative dibuat</div><div class="sm mut" style="margin-top:6px">Target bulan ini belum diisi Manager.'+(can('mgr')?' <a href="#" onclick="goTab(\'mgr\');return false" style="color:var(--m-d);font-weight:800">Isi target →</a>':'')+'</div>';
+  }else{
+    var gt=0;KATS.forEach(function(k){DIVISI.forEach(function(d){gt+=tgtOf(m,k,d)||0;});});
+    var gp=gt?Math.min(100,Math.round(tm.total/gt*100)):0;
+    tg+='<div class="row" style="align-items:flex-end"><div class="fr"><span style="color:var(--m-d)">'+tm.total+'</span> <small>/ '+n0(gt)+' creative</small></div></div><div class="bar"><i style="width:'+gp+'%"></i></div>';
+    KATS.forEach(function(k){
+      var tk=0,parts=[];
+      DIVISI.forEach(function(d){var t=tgtOf(m,k,d)||0;tk+=t;parts.push(esc(d)+' '+tm.kat[k].d[d]+'/'+t);});
+      var p=tk?Math.min(100,Math.round(tm.kat[k].n/tk*100)):0;
+      tg+='<div class="item"><div class="row"><div class="kr-t">'+esc(k)+'</div><div class="sp fr" style="font-size:18px"><span'+(tk&&tm.kat[k].n>=tk?' style="color:var(--ok)"':'')+'>'+tm.kat[k].n+'</span> <small>/ '+n0(tk)+'</small></div></div><div class="bar"><i style="width:'+p+'%"></i></div><div class="sm mut" style="margin-top:6px">'+parts.join(' · ')+'</div></div>';
+    });
+  }
+  tg+='</div>';
+  h+='<div class="gridc">'+hero+tg+'</div>';
+  if(tl.nodiv)h+=note(tl.nodiv+' creative lama belum punya divisi. Buka tab Creative → Ubah, lalu pilih divisinya supaya masuk hitungan per divisi.','warn');
   var cd=campData();
   if(!D.creatives.length)return h+note('Belum ada creative. Brand Creator mengisi di tab Creative.');
-  if(!cd.some(function(c){return c.garr.length;}))h+=note('Belum ada Hasil. Hasil diisi Advertiser di tab Advertiser setelah iklan tayang.');
+  if(!cd.some(function(c){return c.garr.length;}))h+=note('Belum ada Hasil. Hasil dan CTR diisi Advertiser di tab Advertiser setelah iklan tayang.');
   h+='<div class="gridc">';
-  var rank=0;
-  cd.forEach(function(c){
+  var rank=0;CK=[];
+  cd.forEach(function(c,ci){
     var scored=c.garr.length>0;if(scored)rank++;
+    CK[ci]=c.name.toLowerCase();
+    var mode=S.sort[CK[ci]]==='ctr'?'ctr':'hasil';
     h+='<div class="card"><div class="row" style="align-items:flex-start"><div style="flex:1;min-width:0"><div class="h" style="margin-bottom:4px">Kampanye'+(scored?' · #'+rank:'')+'</div><div class="mid" style="font-size:20px;word-break:break-word">'+esc(c.name)+'</div>'+
-      '<div class="sm mut" style="margin-top:4px">'+c.all.length+' creative'+(c.garr.length===1?' · total <b style="color:var(--txt)">'+n0(c.garr[0].total)+'</b> '+esc(c.garr[0].label):'')+'</div></div></div>';
-    c.garr.forEach(function(g){
-      var max=g.list[0].hasil||1;
-      if(c.garr.length>1)h+='<div class="h" style="margin:14px 0 0">Hasil · '+esc(g.label)+' · total '+n0(g.total)+'</div>';
-      h+=g.list.map(function(r,i){
-        var w=r.hasil>0?Math.max(3,Math.round(r.hasil/max*100)):0;
+      '<div class="sm mut" style="margin-top:4px">'+c.all.length+' creative'+(c.garr.length===1?' · total <b style="color:var(--txt)">'+n0(c.garr[0].total)+'</b> '+esc(c.garr[0].label):'')+'</div></div></div>'+
+      '<div class="chips" style="margin:12px 0 0;align-items:center"><span class="sm mut" style="font-weight:700">Urutkan:</span><button class="chip xs '+(mode==='hasil'?'on':'')+'" onclick="setSort('+ci+',\'hasil\')">Hasil</button><button class="chip xs '+(mode==='ctr'?'on':'')+'" onclick="setSort('+ci+',\'ctr\')">CTR</button></div>';
+    if(mode==='hasil'){
+      c.garr.forEach(function(g){
+        var max=g.list[0].hasil||1;
+        if(c.garr.length>1)h+='<div class="h" style="margin:14px 0 0">Hasil · '+esc(g.label)+' · total '+n0(g.total)+'</div>';
+        h+=g.list.map(function(r,i){
+          var w=r.hasil>0?Math.max(3,Math.round(r.hasil/max*100)):0,cx=ctrOf(r.c.id);
+          return '<div class="item rrow'+(i===0?' best':'')+'"><div class="row" style="align-items:flex-start"><div style="flex:1;min-width:0"><div class="kr-t"><span class="rk">#'+(i+1)+'</span> '+esc(r.c.nama)+'</div>'+
+            '<div class="sm mut" style="margin-top:2px">'+esc([r.c.divisi,r.c.kategori||'Belum dikategorikan'].filter(Boolean).join(' · '))+(cx!=null?' · CTR '+ctrFmt(cx):'')+'</div></div><div class="num">'+n0(r.hasil)+'</div></div><div class="rbar"><i style="width:'+w+'%"></i></div></div>';
+        }).join('');
+      });
+      if(c.unscored.length)h+='<div class="sm mut" style="margin-top:12px;line-height:1.7">'+(scored?'Belum ada Hasil: ':'Belum ada Hasil untuk: ')+c.unscored.map(function(x){return esc(x.nama)+(isOff(x)?' (offline, tanpa Hasil)':'');}).join(', ')+'</div>';
+    }else{
+      var maxc=c.ctrList.length?(c.ctrList[0].ctr||1):1;
+      if(!c.ctrList.length)h+='<div class="sm mut" style="margin-top:12px">Belum ada CTR yang diisi untuk kampanye ini.</div>';
+      h+=c.ctrList.map(function(r,i){
+        var w=r.ctr>0?Math.max(3,Math.round(r.ctr/maxc*100)):0,hs=hasilStr(r.c.id);
         return '<div class="item rrow'+(i===0?' best':'')+'"><div class="row" style="align-items:flex-start"><div style="flex:1;min-width:0"><div class="kr-t"><span class="rk">#'+(i+1)+'</span> '+esc(r.c.nama)+'</div>'+
-          '<div class="sm mut" style="margin-top:2px">'+esc(r.c.kategori||'Belum dikategorikan')+'</div></div><div class="num">'+n0(r.hasil)+'</div></div><div class="rbar"><i style="width:'+w+'%"></i></div></div>';
+          '<div class="sm mut" style="margin-top:2px">'+esc([r.c.divisi,r.c.kategori||'Belum dikategorikan'].filter(Boolean).join(' · '))+(hs?' · Hasil '+hs:'')+'</div></div><div class="num">'+ctrFmt(r.ctr)+'</div></div><div class="rbar"><i style="width:'+w+'%"></i></div></div>';
       }).join('');
-    });
-    if(c.unscored.length)h+='<div class="sm mut" style="margin-top:12px;line-height:1.7">'+(scored?'Belum ada Hasil: ':'Belum ada Hasil untuk: ')+c.unscored.map(function(x){return esc(x.nama)+(isOff(x)?' (offline, tanpa Hasil)':'');}).join(', ')+'</div>';
+      if(c.noCtr.length)h+='<div class="sm mut" style="margin-top:12px;line-height:1.7">'+(c.ctrList.length?'Belum ada CTR: ':'Creative: ')+c.noCtr.map(function(x){return esc(x.nama)+(isOff(x)?' (offline, tanpa CTR)':'');}).join(', ')+'</div>';
+      if(c.ctrList.length)h+='<div class="sm mut" style="margin-top:10px">Kalau satu creative punya beberapa tayang, CTR yang dipakai dari tayang terbaru.</div>';
+    }
     h+='</div>';
   });
   return h+'</div>';
@@ -334,20 +401,21 @@ function vDash(){
 
 // ═════════════ CREATIVE (Brand Creator) ═════════════
 function setKf(v){S.kf=v;render();}
+function setCdv(v){S.cdv=v;render();}
+function setAf(v){S.af=v;render();}
 function vCreative(){
   var h='<div class="row" style="margin-bottom:12px"><div class="mid">Creative</div>'+(can('creator')&&!S.cf?'<button class="btn s sp" onclick="cfOpen(\'\')">+ Input creative</button>':'')+'</div>';
   if(S.cf)h+=cfForm();
   var ks=kampanyeList();
   if(ks.length>1)h+='<div class="chips"><button class="chip '+(!S.kf?'on':'')+'" onclick="setKf(\'\')">Semua kampanye</button>'+ks.map(function(k,i){return '<button class="chip '+(S.kf===k?'on':'')+'" onclick="setKf(KS['+i+'])">'+esc(k)+'</button>';}).join('')+'</div>';
   KS=ks;
-  var list=D.creatives.filter(function(c){return !S.kf||c.kampanye===S.kf;}).sort(function(a,b){return a.created<b.created?1:-1;});
+  h+='<div class="chips"><button class="chip '+(!S.cdv?'on':'')+'" onclick="setCdv(\'\')">Semua divisi</button>'+DIVISI.map(function(d,i){return '<button class="chip '+(S.cdv===d?'on':'')+'" onclick="setCdv(DIVISI['+i+'])">'+esc(d)+'</button>';}).join('')+'</div>';
+  var list=D.creatives.filter(function(c){return (!S.kf||c.kampanye===S.kf)&&(!S.cdv||c.divisi===S.cdv);}).sort(function(a,b){return a.created<b.created?1:-1;});
   if(!list.length)return h+'<div class="card"><div class="empty">Belum ada creative.</div></div>';
   h+='<div class="gridc cards">'+list.map(function(c){
-    var s=crStatus(c),sum={};
-    tayOf(c.id).forEach(function(t){if(t.jenis&&t.hasil!=null){var j=jenisLabel(t.jenis);sum[j]=(sum[j]||0)+t.hasil;}});
-    var hs=Object.keys(sum).map(function(j){return '<b>'+n0(sum[j])+'</b> '+esc(j);}).join(' · ');
-    return '<div class="card"><div class="kr-t">'+esc(c.nama)+'</div><div class="tags"><span class="tag brand">'+esc(c.kampanye)+'</span>'+(c.kategori?'<span class="tag na">'+esc(c.kategori)+'</span>':'<span class="tag warn">Pilih kategori (Ubah)</span>')+(isOff(c)?'':'<span class="tag '+s.t+'">'+s.x+'</span>')+'</div>'+
-      (hs?'<div class="sm">Hasil: '+hs+'</div>':'')+
+    var s=crStatus(c),hs=hasilStr(c.id),cx=ctrOf(c.id);
+    return '<div class="card"><div class="kr-t">'+esc(c.nama)+'</div><div class="tags">'+(c.divisi?'<span class="tag dv">'+esc(c.divisi)+'</span>':'<span class="tag warn">Pilih divisi (Ubah)</span>')+'<span class="tag brand">'+esc(c.kampanye)+'</span>'+(c.kategori?'<span class="tag na">'+esc(c.kategori)+'</span>':'<span class="tag warn">Pilih kategori (Ubah)</span>')+(isOff(c)?'':'<span class="tag '+s.t+'">'+s.x+'</span>')+'</div>'+
+      (hs?'<div class="sm">Hasil: '+hs+(cx!=null?' · CTR <b>'+ctrFmt(cx)+'</b>':'')+'</div>':'')+
       '<div class="sm mut" style="margin-top:4px">Oleh '+esc(c.by)+' · '+dLabel((c.created||'').slice(0,10))+'</div>'+
       (can('creator')?'<div class="acts"><button class="btn s ghost" onclick="cfOpen(\''+c.id+'\')">Ubah</button><button class="btn s danger" onclick="cfDelete(\''+c.id+'\')">Hapus</button></div>':'')+'</div>';
   }).join('')+'</div>';
@@ -356,11 +424,12 @@ function vCreative(){
 var KS=[];
 function cfOpen(id){
   var c=id?creativeOf(id):null;
-  S.cf=c?{id:c.id,nama:c.nama,kamp:c.kampanye,kat:c.kategori||''}:{id:uid('c'),nama:'',kamp:'',kat:''};
+  S.cf=c?{id:c.id,nama:c.nama,kamp:c.kampanye,kat:c.kategori||'',div:c.divisi||''}:{id:uid('c'),nama:'',kamp:'',kat:'',div:''};
   render();window.scrollTo(0,0);
 }
 function cfSync(){var f=S.cf;if(!f||!$('cf_nama'))return;f.nama=$('cf_nama').value;f.kamp=$('cf_kamp').value;}
 function cfPickK(i){cfSync();S.cf.kamp=KS[i];render();}
+function cfPickDiv(i){cfSync();S.cf.div=DIVISI[i];render();}
 function cfPickKat(i){cfSync();S.cf.kat=KATS[i];render();}
 function cfForm(){
   var f=S.cf,isNew=!creativeOf(f.id),ks=kampanyeList();KS=ks;
@@ -368,6 +437,7 @@ function cfForm(){
     '<label class="lbl">Nama file *</label><input class="inp" id="cf_nama" maxlength="120" value="'+esc(f.nama)+'" placeholder="mis. Reels Promo Baja Ringan v2">'+
     '<label class="lbl">Untuk kampanye apa? *</label><input class="inp" id="cf_kamp" maxlength="80" value="'+esc(f.kamp)+'" placeholder="mis. Promo Akhir Tahun">'+
     (ks.length?'<div class="sm mut" style="margin:8px 0 6px">Kampanye yang sudah ada (ketuk untuk memakai):</div><div class="chips" style="margin-bottom:0">'+ks.slice(0,10).map(function(k,i){return '<button class="chip '+(f.kamp.toLowerCase()===k.toLowerCase()?'on':'')+'" onclick="cfPickK('+i+')">'+esc(k)+'</button>';}).join('')+'</div>':'')+
+    '<label class="lbl" style="margin-top:16px">Divisi *</label><div class="chips" style="margin-bottom:0">'+DIVISI.map(function(d,i){return '<button class="chip '+(f.div===d?'on':'')+'" onclick="cfPickDiv('+i+')">'+esc(d)+'</button>';}).join('')+'</div>'+
     '<label class="lbl" style="margin-top:16px">Kategori *</label><div class="chips" style="margin-bottom:0">'+KATS.map(function(k,i){return '<button class="chip '+(f.kat===k?'on':'')+'" onclick="cfPickKat('+i+')">'+esc(k)+'</button>';}).join('')+'</div>'+
     (f.kat==='Awareness Offline'?'<div class="sm mut" style="margin-top:8px">Creative offline (spanduk, brosur, dll.) tidak diiklankan, jadi tidak muncul di tab Advertiser dan tidak punya Hasil.</div>':'')+
     '<button class="btn" id="cf_save" onclick="cfSave()">Simpan creative</button><button class="btn ghost" onclick="S.cf=null;render()">Batal</button></div>';
@@ -376,9 +446,10 @@ function cfSave(){
   cfSync();var f=S.cf;
   if(!f.nama.trim()){toast('Nama file wajib diisi',true);return;}
   if(!f.kamp.trim()){toast('Isi untuk kampanye apa',true);return;}
+  if(!f.div){toast('Pilih divisi: Kubah Emas atau Kumasindo',true);return;}
   if(!f.kat){toast('Pilih kategori: Awareness Online, Awareness Offline, atau Iklan Penjualan',true);return;}
   $('cf_save').disabled=true;
-  saveAndReload({action:'creative',id:f.id,nama:f.nama.trim(),kampanye:f.kamp.trim(),kategori:f.kat},'Creative tersimpan').then(function(ok){
+  saveAndReload({action:'creative',id:f.id,nama:f.nama.trim(),kampanye:f.kamp.trim(),kategori:f.kat,divisi:f.div},'Creative tersimpan').then(function(ok){
     if(ok){S.cf=null;render();return;}
     var e=$('cf_save');if(e)e.disabled=false;
   });
@@ -399,29 +470,44 @@ function edSync(){
   if($('ed_jenis'))e.jenis=$('ed_jenis').value;
   if($('ed_jx'))e.jx=$('ed_jx').value;
   if($('ed_hasil'))e.hasil=$('ed_hasil').value;
+  if($('ed_ctr'))e.ctr=$('ed_ctr').value;
+}
+function divTag(c){return c.divisi?'<span class="tag dv">'+esc(c.divisi)+'</span>':'<span class="tag warn">Belum ada divisi</span>';}
+// daftar creative dikelompokkan per divisi (kalau filter divisi aktif: satu kelompok saja, tanpa judul)
+function advList(list,fn){
+  if(S.af)return list.filter(function(c){return c.divisi===S.af;}).map(fn).join('');
+  var h='';
+  DIVISI.concat(['']).forEach(function(d){
+    var l=list.filter(function(c){return (c.divisi||'')===d;});if(!l.length)return;
+    h+='<div class="dvh">'+esc(d||'Belum diberi divisi')+' · '+l.length+'</div>'+l.map(fn).join('');
+  });
+  return h;
 }
 function newTayang(cid){edOpen({type:'tayang',cid:cid,id:'',mulai:TD(),selesai:''});}
 function vAdv(){
   var h='<div class="mid" style="margin-bottom:12px">Advertiser</div>';
   if(!can('adv'))h+=note('Tab ini untuk Advertiser (Lukman). Anda bisa melihat, tidak bisa mengubah.');
-  var queue=D.creatives.filter(function(c){return !isOff(c)&&!tayOf(c.id).length;}).sort(function(a,b){return a.created<b.created?-1:1;});
-  var live=D.creatives.filter(function(c){return !isOff(c)&&tayOf(c.id).length;}).sort(function(a,b){return tayOf(b.id)[0].mulai<tayOf(a.id)[0].mulai?-1:1;});
+  var all=D.creatives.filter(function(c){return !isOff(c);});
+  h+='<div class="chips"><button class="chip '+(!S.af?'on':'')+'" onclick="setAf(\'\')">Semua divisi ('+all.length+')</button>'+DIVISI.map(function(d,i){return '<button class="chip '+(S.af===d?'on':'')+'" onclick="setAf(DIVISI['+i+'])">'+esc(d)+' ('+all.filter(function(c){return c.divisi===d;}).length+')</button>';}).join('')+'</div>';
+  var queue=all.filter(function(c){return !tayOf(c.id).length;}).sort(function(a,b){return a.created<b.created?-1:1;});
+  var live=all.filter(function(c){return tayOf(c.id).length;}).sort(function(a,b){return tayOf(b.id)[0].mulai<tayOf(a.id)[0].mulai?-1:1;});
+  var qn=queue.filter(function(c){return !S.af||c.divisi===S.af;}).length,ln=live.filter(function(c){return !S.af||c.divisi===S.af;}).length;
   h+='<div class="advgrid">';
-  h+='<div class="card a-que"><div class="h">Antrean · belum tayang ('+queue.length+')</div>';
-  if(!queue.length)h+='<div class="empty">Tidak ada antrean. Semua creative sudah punya jadwal tayang.</div>';
-  queue.forEach(function(c){
+  h+='<div class="card a-que"><div class="h">Antrean · belum tayang ('+qn+')</div>';
+  if(!qn)h+='<div class="empty">Tidak ada antrean'+(S.af?' untuk '+esc(S.af):'. Semua creative sudah punya jadwal tayang')+'.</div>';
+  h+=advList(queue,function(c){
     var age=dDiff((c.created||TD()).slice(0,10),TD());
-    h+='<div class="item"><div class="kr-t">'+esc(c.nama)+'</div><div class="tags"><span class="tag brand">'+esc(c.kampanye)+'</span></div><div class="sm mut">Masuk '+(age<=0?'hari ini':age+' hari lalu')+' · oleh '+esc(c.by)+'</div>'+
+    return '<div class="item"><div class="kr-t">'+esc(c.nama)+'</div><div class="tags">'+divTag(c)+'<span class="tag brand">'+esc(c.kampanye)+'</span><span class="tag na">'+esc(c.kategori||'Belum dikategorikan')+'</span></div><div class="sm mut">Masuk '+(age<=0?'hari ini':age+' hari lalu')+' · oleh '+esc(c.by)+'</div>'+
       (can('adv')?'<div class="acts"><button class="btn s" onclick="newTayang(\''+c.id+'\')">Atur tayang</button></div>':'')+edBoxFor(c.id,'')+'</div>';
   });
   h+='</div>';
-  h+='<div class="card a-tay"><div class="h">Tayang & Hasil ('+live.length+' creative)</div>';
-  if(!live.length)h+='<div class="empty">Belum ada tayang.</div>';
-  live.forEach(function(c){
-    h+='<div class="item"><div class="kr-t">'+esc(c.nama)+'</div><div class="tags"><span class="tag brand">'+esc(c.kampanye)+'</span></div>';
-    tayOf(c.id).forEach(function(t){h+=tayRow(c,t);});
-    if(can('adv'))h+='<div class="acts"><button class="btn s ghost" onclick="newTayang(\''+c.id+'\')">+ Tayang baru</button></div>'+edBoxFor(c.id,'');
-    h+='</div>';
+  h+='<div class="card a-tay"><div class="h">Tayang & Hasil ('+ln+' creative)</div>';
+  if(!ln)h+='<div class="empty">Belum ada tayang'+(S.af?' untuk '+esc(S.af):'')+'.</div>';
+  h+=advList(live,function(c){
+    var x='<div class="item"><div class="kr-t">'+esc(c.nama)+'</div><div class="tags">'+divTag(c)+'<span class="tag brand">'+esc(c.kampanye)+'</span><span class="tag na">'+esc(c.kategori||'Belum dikategorikan')+'</span></div>';
+    tayOf(c.id).forEach(function(t){x+=tayRow(c,t);});
+    if(can('adv'))x+='<div class="acts"><button class="btn s ghost" onclick="newTayang(\''+c.id+'\')">+ Tayang baru</button></div>'+edBoxFor(c.id,'');
+    return x+'</div>';
   });
   return h+'</div></div>';
 }
@@ -429,12 +515,13 @@ function tayRow(c,t){
   var st=tStatus(t),stT=st==='Berjalan'?'ok':st==='Selesai'?'brand':'warn';
   var per=dLabel(t.mulai)+' → '+(t.selesai?dLabel(t.selesai):'sekarang')+(st==='Terjadwal'?'':' · '+tDays(t)+' hari');
   var hs;
-  if(st==='Terjadwal')hs='<div class="sm mut" style="margin-top:8px">🔒 Hasil terkunci sampai iklan mulai tayang ('+dLabel(t.mulai)+').</div>';
+  if(st==='Terjadwal')hs='<div class="sm mut" style="margin-top:8px">🔒 Hasil dan CTR terkunci sampai iklan mulai tayang ('+dLabel(t.mulai)+').</div>';
   else if(t.hasil==null)hs='<div class="bigh na" style="margin-top:10px">—</div><div class="hj" style="color:var(--warn)">Hasil belum diisi</div>';
   else hs='<div class="bigh" style="margin-top:10px">'+n0(t.hasil)+'</div><div class="hj">'+esc(jenisLabel(t.jenis))+'</div><div class="sm mut">Diperbarui '+dLabel((t.hasilTs||'').slice(0,10))+'</div>';
+  if(st!=='Terjadwal')hs+=t.ctr!=null?'<div class="ctrl">CTR <b>'+ctrFmt(t.ctr)+'</b></div>':'<div class="ctrl" style="color:var(--warn)">CTR belum diisi</div>';
   var acts='';
   if(can('adv')){
-    acts='<div class="acts">'+(st==='Terjadwal'?'':'<button class="btn s" onclick="hasilOpen(\''+t.id+'\')">'+(t.hasil==null?'Isi Hasil':'Ubah Hasil')+'</button>')+
+    acts='<div class="acts">'+(st==='Terjadwal'?'':'<button class="btn s" onclick="hasilOpen(\''+t.id+'\')">'+(t.hasil==null?'Isi Hasil & CTR':'Ubah Hasil & CTR')+'</button>')+
       '<button class="btn s ghost" onclick="edOpen({type:\'tayang\',cid:\''+c.id+'\',id:\''+t.id+'\',mulai:\''+t.mulai+'\',selesai:\''+t.selesai+'\'})">Ubah periode</button>'+
       (st==='Berjalan'&&!t.selesai?'<button class="btn s ghost" onclick="tStop(\''+t.id+'\')">Hentikan hari ini</button>':'')+
       '<button class="btn s danger" onclick="tDel(\''+t.id+'\')">Hapus</button></div>';
@@ -457,6 +544,7 @@ function edBoxFor(cid,tid){
       (isX?'<input class="inp" style="margin-top:8px" id="ed_jx" maxlength="40" value="'+esc(e.jx||'')+'" placeholder="mis. Pembelian">':'')+
       '<label class="lbl">Hasil</label><input class="inp huge" type="number" inputmode="numeric" min="0" step="1" id="ed_hasil" value="'+esc(e.hasil)+'" placeholder="0">'+
       '<div class="sm mut" style="margin-top:8px">Isi <b>total sejak mulai tayang</b>, bukan per hari. Di Meta, atur rentang tanggal sama dengan periode tayang ini.</div>'+
+      '<label class="lbl">CTR (%) dari kolom CTR di Meta, boleh dikosongkan</label><input class="inp" type="number" inputmode="decimal" min="0" max="100" step="0.01" id="ed_ctr" value="'+esc(e.ctr||'')+'" placeholder="mis. 1,25">'+
       '<button class="btn" id="ed_save" onclick="saveHasil()">Simpan Hasil</button><button class="btn ghost" onclick="edClose()">Batal</button></div>';
   }
   return '';
@@ -465,7 +553,7 @@ function hasilOpen(tid){
   var t=D.tayang.filter(function(x){return x.id===tid;})[0];if(!t)return;
   var known=t.jenis&&JENIS.some(function(j){return j.toLowerCase()===t.jenis.toLowerCase();});
   var jk=known?jenisLabel(t.jenis):(t.jenis?'__x':JENIS[0]);
-  edOpen({type:'hasil',cid:t.cid,id:t.id,mulai:t.mulai,selesai:t.selesai,jenis:jk,jx:known?'':(t.jenis||''),hasil:t.hasil==null?'':String(t.hasil)});
+  edOpen({type:'hasil',cid:t.cid,id:t.id,mulai:t.mulai,selesai:t.selesai,jenis:jk,jx:known?'':(t.jenis||''),hasil:t.hasil==null?'':String(t.hasil),ctr:t.ctr==null?'':String(t.ctr)});
 }
 function saveTayang(){
   edSync();var e=S.ed;
@@ -480,8 +568,10 @@ function saveHasil(){
   if(!j){toast('Isi jenis hasil',true);return;}
   if(e.hasil===''){toast('Isi angka Hasil (isi 0 kalau memang 0)',true);return;}
   if(!/^\d+$/.test(String(e.hasil))){toast('Hasil harus bilangan bulat tanpa titik/koma',true);return;}
+  var cx=String(e.ctr==null?'':e.ctr).trim().replace(',','.');
+  if(cx!==''&&(isNaN(+cx)||+cx<0||+cx>100)){toast('CTR harus angka 0 sampai 100 (persen)',true);return;}
   $('ed_save').disabled=true;
-  saveAndReload({action:'tayang',id:e.id,cid:e.cid,mulai:e.mulai,selesai:e.selesai||'',jenis:j,hasil:+e.hasil},'Hasil tersimpan').then(function(ok){if(ok){S.ed=null;render();}else{var b=$('ed_save');if(b)b.disabled=false;}});
+  saveAndReload({action:'tayang',id:e.id,cid:e.cid,mulai:e.mulai,selesai:e.selesai||'',jenis:j,hasil:+e.hasil,ctr:cx===''?null:+cx},'Hasil & CTR tersimpan').then(function(ok){if(ok){S.ed=null;render();}else{var b=$('ed_save');if(b)b.disabled=false;}});
 }
 function tStop(id){
   var t=D.tayang.filter(function(x){return x.id===id;})[0];if(!t)return;
@@ -493,9 +583,46 @@ function tDel(id){
   saveAndReload({action:'tayangDelete',id:id},'Dihapus');
 }
 
+// ═════════════ MANAGER (target creative per bulan) ═════════════
+function mgInit(m){var v={};KATS.forEach(function(k,i){DIVISI.forEach(function(d,j){var t=tgtOf(m,k,d);v[i+'_'+j]=t==null?'':String(t);});});S.mt={bulan:m,vals:v};}
+function mgSync(){if(!S.mt)return;KATS.forEach(function(k,i){DIVISI.forEach(function(d,j){var e=$('mg_'+i+'_'+j);if(e)S.mt.vals[i+'_'+j]=e.value;});});}
+function mgCalc(){mgSync();var g=0;KATS.forEach(function(k,i){var s=0;DIVISI.forEach(function(d,j){s+=+S.mt.vals[i+'_'+j]||0;});g+=s;var e=$('mg_t'+i);if(e)e.textContent=n0(s);});var e=$('mg_g');if(e)e.textContent=n0(g);}
+function mgPick(m){mgInit(m);render();}
+function mgSave(){
+  mgSync();var items=[];
+  for(var i=0;i<KATS.length;i++)for(var j=0;j<DIVISI.length;j++){
+    var v=String(S.mt.vals[i+'_'+j]).trim();if(v==='')v='0';
+    if(!/^\d{1,4}$/.test(v)){toast('Target harus bilangan bulat 0 sampai 9999 ('+KATS[i]+' · '+DIVISI[j]+')',true);return;}
+    items.push({kategori:KATS[i],divisi:DIVISI[j],jumlah:+v});
+  }
+  $('mg_save').disabled=true;
+  saveAndReload({action:'target',bulan:S.mt.bulan,items:items},'Target tersimpan').then(function(ok){if(ok){mgInit(S.mt.bulan);render();}else{var b=$('mg_save');if(b)b.disabled=false;}});
+}
+function vMgr(){
+  if(!S.mt)mgInit(MON());
+  var m=S.mt.bulan,ed=can('mgr'),h='<div class="mid" style="margin-bottom:12px">Manager</div>';
+  h+=ed?note('Tentukan berapa creative yang harus dibuat tiap bulan, per kategori dan per divisi. Hanya Manager yang bisa mengubah.'):note('Halaman ini hanya bisa diubah oleh Manager (Lukman). Anda bisa melihat targetnya.','warn');
+  h+='<div class="chips">'+[MON(),nextMon(MON())].map(function(x){return '<button class="chip '+(m===x?'on':'')+'" onclick="mgPick(\''+x+'\')">'+esc(monLabel(x))+(x===MON()?' (bulan ini)':'')+'</button>';}).join('')+'</div>';
+  var g=0;
+  h+='<div class="gridc cards">'+KATS.map(function(k,i){
+    var sum=0;
+    var cells=DIVISI.map(function(d,j){
+      var v=S.mt.vals[i+'_'+j];sum+=+v||0;
+      return '<div style="min-width:0"><label class="lbl" style="margin-top:0">'+esc(d)+'</label>'+
+        (ed?'<input class="inp" type="number" inputmode="numeric" min="0" max="9999" step="1" id="mg_'+i+'_'+j+'" value="'+esc(v)+'" placeholder="0" oninput="mgCalc()">':'<div class="bigh'+(v===''?' na':'')+'" style="font-size:34px">'+(v===''?'—':n0(+v))+'</div>')+
+        '<div class="sm mut" style="margin-top:6px">Sudah dibuat: <b>'+inMonth(m).filter(function(c){return c.kategori===k&&c.divisi===d;}).length+'</b></div></div>';
+    }).join('');
+    g+=sum;
+    return '<div class="card" style="margin-bottom:0"><div class="row" style="align-items:flex-start"><div class="kr-t" style="font-size:15px;flex:1">'+esc(k)+'</div><div style="text-align:right"><div class="sm mut">Total</div><b id="mg_t'+i+'" style="font-size:26px;line-height:1;color:var(--m-d)">'+n0(sum)+'</b></div></div><div class="grid2" style="margin-top:14px">'+cells+'</div></div>';
+  }).join('')+'</div>';
+  h+='<div class="card fw" style="margin-top:14px"><div class="row"><div class="kr-t" style="font-size:15px">Total target '+esc(monLabel(m))+'</div><b class="sp" id="mg_g" style="font-size:30px;line-height:1;color:var(--m-d)">'+n0(g)+'</b></div>'+
+    (ed?'<button class="btn" id="mg_save" onclick="mgSave()">Simpan target</button>':'')+'</div>';
+  return h;
+}
+
 // ═════════════ INIT ═════════════
 (function(){
-  S.ok=ls('bc_pin_ok')==='1';S.who=ls('bc_who')||'';
+  S.ok=true;S.who=ls('bc_who')||'';
   if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(function(){});
   start();
 })();
