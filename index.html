@@ -647,38 +647,61 @@ function tDel(id){
 }
 
 // ═════════════ MANAGER (target creative per bulan) ═════════════
-function mgInit(m){var v={};KATS.forEach(function(k,i){DIVISI.forEach(function(d,j){var t=tgtOf(m,k,d);v[i+'_'+j]=t==null?'':String(t);});});S.mt={bulan:m,vals:v};}
-function mgSync(){if(!S.mt)return;KATS.forEach(function(k,i){DIVISI.forEach(function(d,j){var e=$('mg_'+i+'_'+j);if(e)S.mt.vals[i+'_'+j]=e.value;});});}
-function mgCalc(){mgSync();var g=0;KATS.forEach(function(k,i){var s=0;DIVISI.forEach(function(d,j){s+=+S.mt.vals[i+'_'+j]||0;});g+=s;var e=$('mg_t'+i);if(e)e.textContent=n0(s);});var e=$('mg_g');if(e)e.textContent=n0(g);}
+function hasKamp(k){return k!=='Awareness Offline';}   // target kampanye hanya untuk Awareness Online & Iklan Penjualan
+function tgtKamp(m,k,d){var r=D.targets.filter(function(x){return x.bulan===m&&x.kategori===k&&x.divisi===d;})[0];return r&&r.kampanye!=null?r.kampanye:null;}
+// jumlah kampanye yang sudah ada = nama kampanye berbeda pada creative yang dicatat di bulan itu (per kategori & divisi)
+function kampMade(m,k,d){var seen={},n=0;inMonth(m).forEach(function(c){if(c.kategori!==k||c.divisi!==d)return;var key=kampKey(c.kampanye);if(key&&!seen[key]){seen[key]=1;n++;}});return n;}
+function mgInit(m){var v={};KATS.forEach(function(k,i){DIVISI.forEach(function(d,j){var t=tgtOf(m,k,d);v[i+'_'+j]=t==null?'':String(t);if(hasKamp(k)){var kt=tgtKamp(m,k,d);v['k'+i+'_'+j]=kt==null?'':String(kt);}});});S.mt={bulan:m,vals:v};}
+function mgSync(){if(!S.mt)return;KATS.forEach(function(k,i){DIVISI.forEach(function(d,j){var e=$('mg_'+i+'_'+j);if(e)S.mt.vals[i+'_'+j]=e.value;var f=$('mg_k'+i+'_'+j);if(f)S.mt.vals['k'+i+'_'+j]=f.value;});});}
+function mgCalc(){mgSync();var g=0,gk=0;KATS.forEach(function(k,i){var s=0,sk=0;DIVISI.forEach(function(d,j){s+=+S.mt.vals[i+'_'+j]||0;if(hasKamp(k))sk+=+S.mt.vals['k'+i+'_'+j]||0;});g+=s;gk+=sk;var e=$('mg_t'+i);if(e)e.textContent=n0(s);var f=$('mg_kt'+i);if(f)f.textContent=n0(sk);});var e=$('mg_g');if(e)e.textContent=n0(g);var f=$('mg_kg');if(f)f.textContent=n0(gk);}
 function mgPick(m){mgInit(m);render();}
 function mgSave(){
   mgSync();var items=[];
   for(var i=0;i<KATS.length;i++)for(var j=0;j<DIVISI.length;j++){
     var v=String(S.mt.vals[i+'_'+j]).trim();if(v==='')v='0';
-    if(!/^\d{1,4}$/.test(v)){toast('Target harus bilangan bulat 0 sampai 9999 ('+KATS[i]+' · '+DIVISI[j]+')',true);return;}
-    items.push({kategori:KATS[i],divisi:DIVISI[j],jumlah:+v});
+    if(!/^\d{1,4}$/.test(v)){toast('Target creative harus bilangan bulat 0 sampai 9999 ('+KATS[i]+' · '+DIVISI[j]+')',true);return;}
+    var it={kategori:KATS[i],divisi:DIVISI[j],jumlah:+v};
+    if(hasKamp(KATS[i])){
+      var kv=String(S.mt.vals['k'+i+'_'+j]).trim();
+      if(kv!==''&&!/^\d{1,4}$/.test(kv)){toast('Target kampanye harus bilangan bulat 0 sampai 9999 ('+KATS[i]+' · '+DIVISI[j]+')',true);return;}
+      it.kampanye=kv===''?null:+kv;
+    }
+    items.push(it);
   }
   $('mg_save').disabled=true;
   saveAndReload({action:'target',bulan:S.mt.bulan,items:items},'Target tersimpan').then(function(ok){if(ok){mgInit(S.mt.bulan);render();}else{var b=$('mg_save');if(b)b.disabled=false;}});
 }
+function mgSec(label,totId,sum,first){return '<div class="row" style="align-items:flex-end;'+(first?'margin-top:12px':'margin-top:16px;padding-top:14px;border-top:1px solid var(--bdr)')+'"><div class="h" style="margin:0;flex:1">'+label+'</div><div style="text-align:right"><span class="sm mut">Total</span> <b id="'+totId+'" style="font-size:22px;line-height:1;color:var(--m-d)">'+n0(sum)+'</b></div></div>';}
+function mgCell(ed,d,id,v,made,madeLbl){
+  return '<div style="min-width:0"><label class="lbl" style="margin-top:0">'+esc(d)+'</label>'+
+    (ed?'<input class="inp" type="number" inputmode="numeric" min="0" max="9999" step="1" id="'+id+'" value="'+esc(v)+'" placeholder="0" oninput="mgCalc()">':'<div class="bigh'+(v===''?' na':'')+'" style="font-size:34px">'+(v===''?'—':n0(+v))+'</div>')+
+    '<div class="sm mut" style="margin-top:6px">'+madeLbl+': <b>'+made+'</b></div></div>';
+}
 function vMgr(){
   if(!S.mt)mgInit(MON());
   var m=S.mt.bulan,ed=can('mgr'),h='<div class="mid" style="margin-bottom:12px">Manager</div>';
-  h+=ed?note('Tentukan berapa creative yang harus dibuat tiap bulan, per kategori dan per divisi. Hanya Manager yang bisa mengubah.'):note('Halaman ini hanya bisa diubah oleh Manager (Lukman). Anda bisa melihat targetnya.','warn');
+  h+=ed?note('Tentukan target tiap bulan, per kategori dan per divisi: jumlah creative, dan jumlah kampanye (khusus Awareness Online dan Iklan Penjualan). Hanya Manager yang bisa mengubah.'):note('Halaman ini hanya bisa diubah oleh Manager (Lukman). Anda bisa melihat targetnya.','warn');
   h+='<div class="chips">'+[MON(),nextMon(MON())].map(function(x){return '<button class="chip '+(m===x?'on':'')+'" onclick="mgPick(\''+x+'\')">'+esc(monLabel(x))+(x===MON()?' (bulan ini)':'')+'</button>';}).join('')+'</div>';
-  var g=0;
+  var g=0,gk=0,made=inMonth(m);
   h+='<div class="gridc cards">'+KATS.map(function(k,i){
-    var sum=0;
+    var sum=0,sumK=0;
     var cells=DIVISI.map(function(d,j){
       var v=S.mt.vals[i+'_'+j];sum+=+v||0;
-      return '<div style="min-width:0"><label class="lbl" style="margin-top:0">'+esc(d)+'</label>'+
-        (ed?'<input class="inp" type="number" inputmode="numeric" min="0" max="9999" step="1" id="mg_'+i+'_'+j+'" value="'+esc(v)+'" placeholder="0" oninput="mgCalc()">':'<div class="bigh'+(v===''?' na':'')+'" style="font-size:34px">'+(v===''?'—':n0(+v))+'</div>')+
-        '<div class="sm mut" style="margin-top:6px">Sudah dibuat: <b>'+inMonth(m).filter(function(c){return c.kategori===k&&c.divisi===d;}).length+'</b></div></div>';
+      return mgCell(ed,d,'mg_'+i+'_'+j,v,made.filter(function(c){return c.kategori===k&&c.divisi===d;}).length,'Sudah dibuat');
     }).join('');
-    g+=sum;
-    return '<div class="card" style="margin-bottom:0"><div class="row" style="align-items:flex-start"><div class="kr-t" style="font-size:15px;flex:1">'+esc(k)+'</div><div style="text-align:right"><div class="sm mut">Total</div><b id="mg_t'+i+'" style="font-size:26px;line-height:1;color:var(--m-d)">'+n0(sum)+'</b></div></div><div class="grid2" style="margin-top:14px">'+cells+'</div></div>';
+    var kcells='';
+    if(hasKamp(k))kcells=DIVISI.map(function(d,j){
+      var v=S.mt.vals['k'+i+'_'+j];sumK+=+v||0;
+      return mgCell(ed,d,'mg_k'+i+'_'+j,v,kampMade(m,k,d),'Sudah ada');
+    }).join('');
+    g+=sum;gk+=sumK;
+    return '<div class="card" style="margin-bottom:0"><div class="kr-t" style="font-size:15px">'+esc(k)+'</div>'+
+      mgSec('Jumlah creative','mg_t'+i,sum,true)+'<div class="grid2" style="margin-top:12px">'+cells+'</div>'+
+      (hasKamp(k)?mgSec('Jumlah kampanye','mg_kt'+i,sumK,false)+'<div class="grid2" style="margin-top:12px">'+kcells+'</div>':'')+'</div>';
   }).join('')+'</div>';
-  h+='<div class="card fw" style="margin-top:14px"><div class="row"><div class="kr-t" style="font-size:15px">Total target '+esc(monLabel(m))+'</div><b class="sp" id="mg_g" style="font-size:30px;line-height:1;color:var(--m-d)">'+n0(g)+'</b></div>'+
+  h+='<div class="sm mut" style="margin:10px 2px 0">“Sudah ada” untuk kampanye = jumlah nama kampanye berbeda pada creative yang dicatat bulan ini, per kategori dan divisi. Kolom target kampanye yang dikosongkan berarti belum ditetapkan.</div>';
+  h+='<div class="card fw" style="margin-top:14px"><div class="row"><div class="kr-t" style="font-size:15px">Total target creative '+esc(monLabel(m))+'</div><b class="sp" id="mg_g" style="font-size:30px;line-height:1;color:var(--m-d)">'+n0(g)+'</b></div>'+
+    '<div class="row" style="margin-top:8px"><div class="kr-t" style="font-size:15px">Total target kampanye '+esc(monLabel(m))+'</div><b class="sp" id="mg_kg" style="font-size:30px;line-height:1;color:var(--m-d)">'+n0(gk)+'</b></div>'+
     (ed?'<button class="btn" id="mg_save" onclick="mgSave()">Simpan target</button>':'')+'</div>';
   return h;
 }
