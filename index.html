@@ -80,6 +80,21 @@ tr:last-child td{border-bottom:none}
 .btn.kill{background:var(--bad);color:#fff}
 .ctrl{font-size:12px;font-weight:700;color:var(--txt2);margin-top:4px}
 .ctrl b{font-size:15px;color:var(--m-d)}
+.kpi{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}
+.kpi .k{background:var(--card2);border:1px solid var(--bdr);border-radius:14px;padding:12px 13px;min-width:0}
+.kpi .k b{display:block;font-size:28px;font-weight:800;line-height:1.05;color:var(--m-d)}
+.kpi .k b small{font-size:14px;color:var(--mut);font-weight:700}
+.kpi .k span{display:block;font-size:11px;font-weight:800;color:var(--txt2);margin-top:6px}
+.kpi .k .sub{font-size:10.5px;color:var(--mut);font-weight:600;line-height:1.45;margin-top:3px}
+.kpi .k.wide{grid-column:1/-1}
+.stt{display:inline-block;font-size:15px;font-weight:800;letter-spacing:.03em;padding:8px 14px;border-radius:12px}
+.stt.ok{background:var(--ok-l);color:var(--ok)}.stt.brand{background:var(--m-l);color:var(--m-d)}.stt.bad{background:var(--bad-l);color:var(--bad)}.stt.na{background:var(--bg2);color:var(--mut)}
+.kepbox{border-radius:12px;padding:9px 12px;font-size:12px;line-height:1.5;margin-top:8px;border:1px solid var(--bdr);background:var(--card2)}
+.kepbox.win{background:var(--ok-l);border-color:#BDE5CC;color:#14532D}
+.cara{margin-top:14px;font-size:12px;line-height:1.65;color:var(--txt2)}
+.cara summary{cursor:pointer;font-weight:800;color:var(--m-d)}
+.cara ul{margin:8px 0 0 18px}
+.btn.win{background:var(--ok);color:#fff}
 .tgt .bar{height:8px;border-radius:99px;background:var(--bg2);overflow:hidden;margin-top:8px}
 .tgt .bar>i{display:block;height:100%;border-radius:99px;background:var(--m)}
 .tgt .fr{font-size:22px;font-weight:800;line-height:1}.tgt .fr small{font-size:13px;color:var(--mut);font-weight:700}
@@ -153,6 +168,7 @@ input[type=date]::-webkit-date-and-time-value{text-align:left;min-width:0}
   body.shell .nav button.on{background:var(--m);color:var(--ch)}
   body.shell .nav button .ic{font-size:18px}
   body.shell .wrap{max-width:none;margin:0;padding:30px 36px 48px}
+  .kpi{grid-template-columns:repeat(5,1fr)}.kpi .k.wide{grid-column:auto}
   .stat b{font-size:34px}.stat span{font-size:12px}
   .toast{bottom:28px}
   .advgrid{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);grid-template-areas:"tay que"}
@@ -181,8 +197,8 @@ function isOff(c){return c.kategori==='Awareness Offline';}   // creative offlin
 var MONTH_ID=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 
 // ═════════════ UTIL ═════════════
-var S={ok:true,who:'',tab:'dash',loaded:false,err:'',kf:'',cdv:'',af:'',sort:{},mt:null,cf:null,ed:null};
-var D={creatives:[],tayang:[],targets:[],kills:[],today:'',month:''};
+var S={ok:true,who:'',tab:'dash',loaded:false,err:'',kf:'',cdv:'',af:'',kd:false,sort:{},mt:null,cf:null,ed:null};
+var D={creatives:[],tayang:[],targets:[],kills:[],keputusan:[],today:'',month:''};
 function $(id){return document.getElementById(id);}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v);}catch(e){return null;}}
@@ -202,7 +218,7 @@ function apiReady(){return APPS_SCRIPT_URL&&APPS_SCRIPT_URL.indexOf('PASTE_')!==
 function apiLoad(){
   return fetch(APPS_SCRIPT_URL+'?action=load&cb='+Date.now()).then(function(r){return r.json();}).then(function(j){
     if(!j.ok)throw new Error(j.error||'Server menolak permintaan');
-    D={creatives:j.creatives||[],tayang:j.tayang||[],targets:j.targets||[],kills:j.kills||[],today:j.today||'',month:j.month||''};
+    D={creatives:j.creatives||[],tayang:j.tayang||[],targets:j.targets||[],kills:j.kills||[],keputusan:j.keputusan||[],today:j.today||'',month:j.month||''};
   });
 }
 function apiPost(p){
@@ -302,7 +318,7 @@ function MON(){return D.month||TD().slice(0,7);}
 function nextMon(m){var a=m.split('-'),y=+a[0],mo=+a[1]+1;if(mo>12){mo=1;y++;}return y+'-'+String(mo).padStart(2,'0');}
 function monLabel(m){var a=m.split('-');return MONTH_ID[+a[1]-1]+' '+a[0];}
 function tgtOf(m,k,d){var r=D.targets.filter(function(x){return x.bulan===m&&x.kategori===k&&x.divisi===d;})[0];return r?r.jumlah:null;}
-function hasTgt(m){return D.targets.some(function(x){return x.bulan===m;});}
+function hasTgt(m){return D.targets.some(function(x){return x.bulan===m&&x.kategori!==WK;});}
 function kampKey(n){return String(n||'').toLowerCase();}
 function killRec(tipe,target){return D.kills.filter(function(k){return k.tipe===tipe&&k.target===target;})[0]||null;}
 // KILL efektif sebuah creative: KILL sendiri, atau ikut kampanyenya
@@ -319,6 +335,79 @@ function killTxt(k){return k.alasan+(k.catatan?' — '+k.catatan:'');}
 function killBox(k,pre){return '<div class="killbox"><b>KILL</b>'+(pre||'')+' · '+esc(killTxt(k))+'<div class="sm" style="opacity:.8">Oleh '+esc(k.by)+' · '+dLabel((k.ts||'').slice(0,10))+'</div></div>';}
 function dKill(c){var k=killRec('creative',c.id);return k?' · <b style="color:var(--bad)">KILL: '+esc(k.alasan)+'</b>':'';}
 function inMonth(m){return D.creatives.filter(function(c){return (c.created||'').slice(0,7)===m;});}
+
+// ═════════════ KINERJA BRAND CREATOR (Winner) ═════════════
+var WK='__winner__';   // baris khusus di tab Target = target jumlah Winner per bulan
+function tgtW(m){var r=D.targets.filter(function(x){return x.bulan===m&&x.kategori===WK;})[0];return r?r.jumlah:null;}
+function kepOf(cid){return D.keputusan.filter(function(k){return k.cid===cid;})[0]||null;}
+function isWin(c){var k=kepOf(c.id);return !!k&&k.status==='WINNER';}
+function firstStart(c){var td=TD(),best='';tayOf(c.id).forEach(function(t){if(t.mulai<=td&&(!best||t.mulai<best))best=t.mulai;});return best;}   // tanggal tayang pertama yang sudah mulai
+function nTurunan(wid){return D.creatives.filter(function(c){return c.turunan===wid;}).length;}
+function dKep(c){var k=kepOf(c.id);if(!k)return '';return ' · <b style="color:'+(k.status==='WINNER'?'var(--ok)':'var(--m-d)')+'">'+k.status+'</b>';}
+function kepTag(c){
+  if(isOff(c)||!firstStart(c))return '';
+  var k=kepOf(c.id);
+  if(k)return '<span class="tag '+(k.status==='WINNER'?'ok':'brand')+'">'+k.status+'</span>';
+  return killOf(c)?'':'<span class="tag warn">Belum diputuskan</span>';
+}
+function paceOf(m){
+  var a=m.split('-'),dim=new Date(+a[0],+a[1],0).getDate(),td=TD();
+  if(td.slice(0,7)>m)return {p:1,day:dim,dim:dim};
+  var d=+td.slice(8);return {p:d/dim,day:d,dim:dim};
+}
+// angka kinerja satu bulan. "Diuji" dan "Winner" dikelompokkan menurut bulan tayang pertama creative (creative online saja)
+function bcStats(m){
+  var tested=D.creatives.filter(function(c){return !isOff(c)&&firstStart(c).slice(0,7)===m;});
+  var win=tested.filter(isWin),rep=win.filter(function(c){return nTurunan(c.id)>0;});
+  var undec=tested.filter(function(c){return !kepOf(c.id)&&!killOf(c);});
+  var gt=0;KATS.forEach(function(k){DIVISI.forEach(function(d){gt+=tgtOf(m,k,d)||0;});});
+  var backlog=D.creatives.filter(function(c){return !isOff(c)&&firstStart(c)&&!kepOf(c.id)&&!killOf(c);}).length;
+  return {made:inMonth(m).length,gt:gt,hasT:hasTgt(m)&&gt>0,tw:tgtW(m),tested:tested,win:win,rep:rep,undec:undec,backlog:backlog,pace:paceOf(m)};
+}
+// status: Dibuat dan Winner dibandingkan dengan target yang diharapkan sampai hari ini (pro-rata hari berjalan)
+function bcStatus(s){
+  if(!s.hasT)return {k:'na',x:'Target creative belum diisi',why:[]};
+  if(s.tw==null)return {k:'na',x:'Target Winner belum diisi',why:[]};
+  var p=s.pace.p,expA=s.gt*p,expB=s.tw*p,A=s.made/expA,B=s.tw>0?s.win.length/expB:1,C=s.win.length?s.rep.length/s.win.length:null,why=[];
+  var e1=function(x){return (Math.round(x*10)/10).toLocaleString('id-ID');};
+  if(A<0.8)why.push('Creative dibuat '+s.made+', kurang dari 80% dari '+e1(expA)+' yang diharapkan sampai hari ini');
+  if(B<0.5)why.push('Winner '+s.win.length+', kurang dari 50% dari '+e1(expB)+' yang diharapkan sampai hari ini');
+  if(why.length)return {k:'bad',x:'UNDER PERFORM',why:why};
+  if(A>=1&&B>=1&&C!=null&&C>=0.8)return {k:'ok',x:'PERFORM BANGET',why:[]};
+  if(A<1)why.push('Creative dibuat '+s.made+' dari '+e1(expA)+' yang diharapkan: belum 100%');
+  if(B<1)why.push('Winner '+s.win.length+' dari '+e1(expB)+' yang diharapkan: belum 100%');
+  if(C==null)why.push('Belum ada Winner, jadi replikasi belum bisa dinilai');
+  else if(C<0.8)why.push('Winner yang sudah direplikasi '+s.rep.length+' dari '+s.win.length+': belum 80%');
+  return {k:'brand',x:'PERFORM',why:why};
+}
+function kpiTile(v,lbl,sub,wide){return '<div class="k'+(wide?' wide':'')+'"><b>'+v+'</b><span>'+lbl+'</span><div class="sub">'+sub+'</div></div>';}
+function vKpi(m){
+  var s=bcStats(m),st=bcStatus(s),interim=s.pace.day<s.pace.dim;
+  var rate=s.tested.length?Math.round(s.win.length/s.tested.length*100)+'%':'—';
+  var waiting=s.win.filter(function(c){return nTurunan(c.id)===0;}).length;
+  var h='<div class="card"><div class="row" style="align-items:flex-start"><div style="flex:1;min-width:0"><div class="h" style="margin-bottom:6px">Kinerja Brand Creator · '+esc(monLabel(m))+'</div>'+
+    '<span class="stt '+st.k+'">'+esc(st.x)+'</span>'+(interim&&st.k!=='na'?' <span class="sm mut" style="margin-left:6px">sementara · hari ke-'+s.pace.day+' dari '+s.pace.dim+'</span>':'')+'</div></div>';
+  if(st.why.length)h+='<div class="sm" style="margin-top:10px;color:var(--txt2)">'+st.why.map(function(w){return '• '+esc(w);}).join('<br>')+'</div>';
+  if(st.k==='na'&&can('mgr'))h+='<div class="sm mut" style="margin-top:8px"><a href="#" onclick="goTab(\'mgr\');return false" style="color:var(--m-d);font-weight:800">Isi target di tab Manager →</a></div>';
+  h+='<div class="kpi">'+
+    kpiTile(s.hasT?s.made+' <small>/ '+n0(s.gt)+'</small>':String(s.made),'Creative Dibuat / Target',s.hasT?'Hari ini seharusnya ±'+n0(Math.round(s.gt*s.pace.p)):'Target bulan ini belum diisi')+
+    kpiTile(String(s.tested.length),'Creative Sudah Diuji','tayang pertama bulan ini'+(s.undec.length?' · '+s.undec.length+' belum diputuskan':''))+
+    kpiTile(String(s.win.length),'Creative Winner',s.tw!=null?'target bulan ini '+n0(s.tw):'target Winner belum diisi')+
+    kpiTile(rate,'Winner Rate','Winner ÷ Diuji'+(s.tested.length?' · '+s.win.length+' dari '+s.tested.length:''))+
+    kpiTile(s.rep.length+' <small>/ '+s.win.length+'</small>','Winner Sudah Direplikasi',waiting?waiting+' Winner menunggu versi turunan':(s.win.length?'semua sudah punya turunan':'belum ada Winner'),true)+
+    '</div>';
+  h+='<details class="cara"><summary>Cara hitung</summary><ul>'+
+    '<li><b>Dibuat</b>: semua creative yang dicatat bulan ini (termasuk Awareness Offline) dibanding target creative.</li>'+
+    '<li><b>Diuji</b>: creative online yang tayang pertamanya mulai bulan ini. Awareness Offline tidak diiklankan, jadi tidak dihitung.</li>'+
+    '<li><b>Winner</b>: ditetapkan Advertiser dari creative yang diuji, dengan alasan. Ranking #1 tidak otomatis Winner. Winner yang kemudian di-KILL tetap dihitung Winner.</li>'+
+    '<li><b>Winner Rate</b> = Winner ÷ Diuji × 100%. Creative yang belum diputuskan ikut jadi pembagi, jadi angkanya naik setelah Advertiser memutuskan.</li>'+
+    '<li><b>Direplikasi</b>: Winner yang punya minimal satu creative turunan (diisi di field "Turunan dari" saat input creative).</li>'+
+    '<li><b>UNDER PERFORM</b>: Dibuat &lt; 80% atau Winner &lt; 50% dari yang diharapkan sampai hari ini. <b>PERFORM BANGET</b>: Dibuat ≥ 100%, Winner ≥ 100%, dan ≥ 80% Winner sudah direplikasi. Selain itu <b>PERFORM</b>.</li>'+
+    '<li>Yang diharapkan sampai hari ini = target × (hari berjalan ÷ jumlah hari bulan ini). Status berlabel "sementara" sampai akhir bulan.</li>'+
+    '</ul></details></div>';
+  if(can('adv')&&s.backlog)h+=note(s.backlog+' creative sudah tayang tapi belum diputuskan (semua bulan). Buka tab Advertiser, pilih WINNER, LANJUT, atau KILL.','warn');
+  return h;
+}
 
 // ═════════════ SHELL ═════════════
 function pickWho(){
@@ -390,7 +479,7 @@ function vDash(){
     });
   }
   tg+='</div>';
-  h+='<div class="gridc">'+hero+tg+'</div>';
+  h+=vKpi(m)+'<div class="gridc">'+hero+tg+'</div>';
   if(tl.nodiv)h+=note(tl.nodiv+' creative lama belum punya divisi. Buka tab Creative → Ubah, lalu pilih divisinya supaya masuk hitungan per divisi.','warn');
   var cd=campData();
   if(!D.creatives.length)return h+note('Belum ada creative. Brand Creator mengisi di tab Creative.');
@@ -411,7 +500,7 @@ function vDash(){
         h+=g.list.map(function(r,i){
           var w=r.hasil>0?Math.max(3,Math.round(r.hasil/max*100)):0,cx=ctrOf(r.c.id,kampKey(c.name));
           return '<div class="item rrow'+(i===0?' best':'')+'"><div class="row" style="align-items:flex-start"><div style="flex:1;min-width:0"><div class="kr-t"><span class="rk">#'+(i+1)+'</span> '+esc(r.c.nama)+'</div>'+
-            '<div class="sm mut" style="margin-top:2px">'+esc([r.c.divisi,r.c.kategori||'Belum dikategorikan'].filter(Boolean).join(' · '))+(cx!=null?' · CTR '+ctrFmt(cx):'')+dKill(r.c)+'</div></div><div class="num">'+n0(r.hasil)+'</div></div><div class="rbar"><i style="width:'+w+'%"></i></div></div>';
+            '<div class="sm mut" style="margin-top:2px">'+esc([r.c.divisi,r.c.kategori||'Belum dikategorikan'].filter(Boolean).join(' · '))+(cx!=null?' · CTR '+ctrFmt(cx):'')+dKill(r.c)+dKep(r.c)+'</div></div><div class="num">'+n0(r.hasil)+'</div></div><div class="rbar"><i style="width:'+w+'%"></i></div></div>';
         }).join('');
       });
       if(c.unscored.length)h+='<div class="sm mut" style="margin-top:12px;line-height:1.7">'+(scored?'Belum ada Hasil: ':'Belum ada Hasil untuk: ')+c.unscored.map(function(x){return esc(x.nama)+(isOff(x)?' (offline, tanpa Hasil)':'');}).join(', ')+'</div>';
@@ -421,7 +510,7 @@ function vDash(){
       h+=c.ctrList.map(function(r,i){
         var w=r.ctr>0?Math.max(3,Math.round(r.ctr/maxc*100)):0,hs=hasilStr(r.c.id,kampKey(c.name));
         return '<div class="item rrow'+(i===0?' best':'')+'"><div class="row" style="align-items:flex-start"><div style="flex:1;min-width:0"><div class="kr-t"><span class="rk">#'+(i+1)+'</span> '+esc(r.c.nama)+'</div>'+
-          '<div class="sm mut" style="margin-top:2px">'+esc([r.c.divisi,r.c.kategori||'Belum dikategorikan'].filter(Boolean).join(' · '))+(hs?' · Hasil '+hs:'')+dKill(r.c)+'</div></div><div class="num">'+ctrFmt(r.ctr)+'</div></div><div class="rbar"><i style="width:'+w+'%"></i></div></div>';
+          '<div class="sm mut" style="margin-top:2px">'+esc([r.c.divisi,r.c.kategori||'Belum dikategorikan'].filter(Boolean).join(' · '))+(hs?' · Hasil '+hs:'')+dKill(r.c)+dKep(r.c)+'</div></div><div class="num">'+ctrFmt(r.ctr)+'</div></div><div class="rbar"><i style="width:'+w+'%"></i></div></div>';
       }).join('');
       if(c.noCtr.length)h+='<div class="sm mut" style="margin-top:12px;line-height:1.7">'+(c.ctrList.length?'Belum ada CTR: ':'Creative: ')+c.noCtr.map(function(x){return esc(x.nama)+(isOff(x)?' (offline, tanpa CTR)':'');}).join(', ')+'</div>';
       if(c.ctrList.length)h+='<div class="sm mut" style="margin-top:10px">Kalau satu creative punya beberapa tayang, CTR yang dipakai dari tayang terbaru.</div>';
@@ -435,9 +524,11 @@ function vDash(){
 function setKf(v){S.kf=v;render();}
 function setCdv(v){S.cdv=v;render();}
 function setAf(v){S.af=v;render();}
+function setKd(v){S.kd=v;render();}
 function vCreative(){
   var h='<div class="row" style="margin-bottom:12px"><div class="mid">Creative</div>'+(can('creator')&&!S.cf?'<button class="btn s sp" onclick="cfOpen(\'\')">+ Input creative</button>':'')+'</div>';
   if(S.cf)h+=cfForm();
+  if(!S.cf)h+=waitCard();
   var ks=kampanyeList();
   if(ks.length>1)h+='<div class="chips"><button class="chip '+(!S.kf?'on':'')+'" onclick="setKf(\'\')">Semua kampanye</button>'+ks.map(function(k,i){return '<button class="chip '+(S.kf===k?'on':'')+'" onclick="setKf(KS['+i+'])">'+esc(k)+(killRec('kampanye',kampKey(k))?' · KILL':'')+'</button>';}).join('')+'</div>';
   KS=ks;
@@ -446,7 +537,7 @@ function vCreative(){
   if(!list.length)return h+'<div class="card"><div class="empty">Belum ada creative.</div></div>';
   h+='<div class="gridc cards">'+list.map(function(c){
     var s=crStatus(c),kl=killOf(c);
-    return '<div class="card"><div class="kr-t">'+esc(c.nama)+'</div><div class="tags">'+(c.divisi?'<span class="tag dv">'+esc(c.divisi)+'</span>':'<span class="tag warn">Pilih divisi (Ubah)</span>')+kampTags(c)+(c.kategori?'<span class="tag na">'+esc(c.kategori)+'</span>':'<span class="tag warn">Pilih kategori (Ubah)</span>')+(kl?'<span class="tag bad">KILL</span>':isOff(c)?'':'<span class="tag '+s.t+'">'+s.x+'</span>')+'</div>'+
+    return '<div class="card"><div class="kr-t">'+esc(c.nama)+'</div><div class="tags">'+(c.divisi?'<span class="tag dv">'+esc(c.divisi)+'</span>':'<span class="tag warn">Pilih divisi (Ubah)</span>')+kampTags(c)+(c.kategori?'<span class="tag na">'+esc(c.kategori)+'</span>':'<span class="tag warn">Pilih kategori (Ubah)</span>')+(kl?'<span class="tag bad">KILL</span>':isOff(c)?'':'<span class="tag '+s.t+'">'+s.x+'</span>')+kepTag(c)+turTag(c)+'</div>'+
       (kl?killBox(kl,killPre(kl)):'')+
       '<div class="sm mut" style="margin-top:4px">Oleh '+esc(c.by)+' · '+dLabel((c.created||'').slice(0,10))+'</div>'+
       (can('creator')?'<div class="acts"><button class="btn s ghost" onclick="cfOpen(\''+c.id+'\')">Ubah</button><button class="btn s danger" onclick="cfDelete(\''+c.id+'\')">Hapus</button></div>':'')+'</div>';
@@ -454,9 +545,27 @@ function vCreative(){
   return h;
 }
 var KS=[];
+function turTag(c){var w=c.turunan?creativeOf(c.turunan):null;return w?'<span class="tag brand">Turunan dari: '+esc(w.nama)+'</span>':'';}
+// Winner yang belum dibuat versi turunannya = daftar kerja Brand Creator
+function waitCard(){
+  var w=D.creatives.filter(function(c){return isWin(c)&&!isOff(c)&&nTurunan(c.id)===0;});
+  if(!w.length)return '';
+  var h='<div class="card" style="border-color:#BDE5CC"><div class="h" style="color:var(--ok)">Winner menunggu direplikasi ('+w.length+')</div><div class="sm mut" style="margin-bottom:6px">Dinilai layak oleh Advertiser. Buat versi turunannya, lalu isi "Turunan dari" saat input creative.</div>';
+  w.forEach(function(c){var k=kepOf(c.id);
+    h+='<div class="item"><div class="kr-t">'+esc(c.nama)+'</div><div class="tags">'+divTag(c)+kampTags(c)+'</div>'+(k&&k.catatan?'<div class="sm">Alasan: '+esc(k.catatan)+'</div>':'')+
+      (can('creator')?'<div class="acts"><button class="btn s" onclick="cfOpenTur(\''+c.id+'\')">+ Buat turunan</button></div>':'')+'</div>';});
+  return h+'</div>';
+}
+function cfOpenTur(wid){
+  var w=creativeOf(wid);if(!w)return;
+  S.cf={id:uid('c'),nama:'',kamp:w.kampanye,kat:w.kategori||'',div:w.divisi||'',tur:w.id};
+  render();window.scrollTo(0,0);
+}
+function cfPickTur(i){cfSync();S.cf.tur=i<0?'':TURS[i];render();}
+var TURS=[];
 function cfOpen(id){
   var c=id?creativeOf(id):null;
-  S.cf=c?{id:c.id,nama:c.nama,kamp:c.kampanye,kat:c.kategori||'',div:c.divisi||''}:{id:uid('c'),nama:'',kamp:'',kat:'',div:''};
+  S.cf=c?{id:c.id,nama:c.nama,kamp:c.kampanye,kat:c.kategori||'',div:c.divisi||'',tur:c.turunan||''}:{id:uid('c'),nama:'',kamp:'',kat:'',div:'',tur:''};
   render();window.scrollTo(0,0);
 }
 function cfSync(){var f=S.cf;if(!f||!$('cf_nama'))return;f.nama=$('cf_nama').value;f.kamp=$('cf_kamp').value;}
@@ -472,7 +581,18 @@ function cfForm(){
     '<label class="lbl" style="margin-top:16px">Divisi *</label><div class="chips" style="margin-bottom:0">'+DIVISI.map(function(d,i){return '<button class="chip '+(f.div===d?'on':'')+'" onclick="cfPickDiv('+i+')">'+esc(d)+'</button>';}).join('')+'</div>'+
     '<label class="lbl" style="margin-top:16px">Kategori *</label><div class="chips" style="margin-bottom:0">'+KATS.map(function(k,i){return '<button class="chip '+(f.kat===k?'on':'')+'" onclick="cfPickKat('+i+')">'+esc(k)+'</button>';}).join('')+'</div>'+
     (f.kat==='Awareness Offline'?'<div class="sm mut" style="margin-top:8px">Creative offline (spanduk, brosur, dll.) tidak diiklankan, jadi tidak muncul di tab Advertiser dan tidak punya Hasil.</div>':'')+
+    turPick(f)+
     '<button class="btn" id="cf_save" onclick="cfSave()">Simpan creative</button><button class="btn ghost" onclick="S.cf=null;render()">Batal</button></div>';
+}
+function turPick(f){
+  var ws=D.creatives.filter(function(c){return c.id!==f.id&&!isOff(c)&&(isWin(c)||c.id===f.tur);});
+  TURS=ws.map(function(c){return c.id;});
+  var cur=f.tur?creativeOf(f.tur):null;
+  var h='<label class="lbl" style="margin-top:16px">Turunan dari Winner? (opsional)</label>';
+  if(!ws.length)return h+'<div class="sm mut">Belum ada Winner. Kalau creative ini versi turunan dari creative yang sudah ditetapkan Winner, pilihannya muncul di sini.</div>';
+  h+='<div class="chips" style="margin-bottom:0"><button class="chip '+(!f.tur?'on':'')+'" onclick="cfPickTur(-1)">Bukan turunan</button>'+
+    ws.map(function(c,i){return '<button class="chip '+(f.tur===c.id?'on':'')+'" onclick="cfPickTur('+i+')">'+esc(c.nama)+'</button>';}).join('')+'</div>';
+  return h+'<div class="sm mut" style="margin-top:8px">Dipakai untuk menghitung "Winner sudah direplikasi" di Dashboard.</div>';
 }
 function cfSave(){
   cfSync();var f=S.cf;
@@ -483,7 +603,7 @@ function cfSave(){
   var kr=killRec('kampanye',kampKey(f.kamp.trim()));
   if(kr&&!confirm('Kampanye "'+f.kamp.trim()+'" sedang di-KILL ('+killTxt(kr)+'). Tetap simpan creative ini?'))return;
   $('cf_save').disabled=true;
-  saveAndReload({action:'creative',id:f.id,nama:f.nama.trim(),kampanye:f.kamp.trim(),kategori:f.kat,divisi:f.div},'Creative tersimpan').then(function(ok){
+  saveAndReload({action:'creative',id:f.id,nama:f.nama.trim(),kampanye:f.kamp.trim(),kategori:f.kat,divisi:f.div,turunan:f.tur||''},'Creative tersimpan').then(function(ok){
     if(ok){S.cf=null;render();return;}
     var e=$('cf_save');if(e)e.disabled=false;
   });
@@ -575,26 +695,48 @@ function vAdv(){
   h+='<div class="chips"><button class="chip '+(!S.af?'on':'')+'" onclick="setAf(\'\')">Semua divisi ('+all.length+')</button>'+DIVISI.map(function(d,i){return '<button class="chip '+(S.af===d?'on':'')+'" onclick="setAf(DIVISI['+i+'])">'+esc(d)+' ('+all.filter(function(c){return c.divisi===d;}).length+')</button>';}).join('')+'</div>';
   var queue=all.filter(function(c){return !tayOf(c.id).length;}).sort(function(a,b){return a.created<b.created?-1:1;});
   var live=all.filter(function(c){return tayOf(c.id).length;}).sort(function(a,b){return tayOf(b.id)[0].mulai<tayOf(a.id)[0].mulai?-1:1;});
-  var qn=queue.filter(function(c){return !S.af||c.divisi===S.af;}).length,ln=live.filter(function(c){return !S.af||c.divisi===S.af;}).length;
+  var undecN=live.filter(function(c){return firstStart(c)&&!kepOf(c.id)&&(!S.af||c.divisi===S.af);}).length;
+  var qn=queue.filter(function(c){return !S.af||c.divisi===S.af;}).length,ln=live.filter(function(c){return (!S.af||c.divisi===S.af)&&(!S.kd||(firstStart(c)&&!kepOf(c.id)));}).length;
   h+='<div class="advgrid">';
   h+='<div class="card a-que"><div class="h">Antrean · belum tayang ('+qn+')</div>';
   if(!qn)h+='<div class="empty">Tidak ada antrean'+(S.af?' untuk '+esc(S.af):'. Semua creative sudah punya jadwal tayang')+'.</div>';
   h+=advList(queue,function(c){
     var age=dDiff((c.created||TD()).slice(0,10),TD());
     return '<div class="item"><div class="kr-t">'+esc(c.nama)+'</div><div class="tags">'+divTag(c)+kampTags(c)+'<span class="tag na">'+esc(c.kategori||'Belum dikategorikan')+'</span></div><div class="sm mut">Masuk '+(age<=0?'hari ini':age+' hari lalu')+' · oleh '+esc(c.by)+'</div>'+
-      (can('adv')?'<div class="acts"><button class="btn s" onclick="newTayang(\''+c.id+'\')">Atur tayang</button><button class="btn s danger" onclick="killCr(\''+c.id+'\')">KILL</button></div>':'')+edBoxFor(c.id,'')+'</div>';
+      (can('adv')?'<div class="acts"><button class="btn s" onclick="newTayang(\''+c.id+'\')">Atur tayang</button><button class="btn s danger" onclick="killCr(\''+c.id+'\')">KILL — Hentikan</button></div>':'')+edBoxFor(c.id,'')+'</div>';
   });
   h+='</div>';
-  h+='<div class="card a-tay"><div class="h">Tayang & Hasil ('+ln+' creative)</div>';
-  if(!ln)h+='<div class="empty">Belum ada tayang'+(S.af?' untuk '+esc(S.af):'')+'.</div>';
-  h+=advList(live,function(c){
-    var x='<div class="item"><div class="kr-t">'+esc(c.nama)+'</div><div class="tags">'+divTag(c)+kampTags(c)+'<span class="tag na">'+esc(c.kategori||'Belum dikategorikan')+'</span></div>';
+  h+='<div class="card a-tay"><div class="h">Tayang & Hasil ('+ln+' creative)</div>'+
+    '<div class="chips" style="margin-bottom:6px"><button class="chip xs '+(!S.kd?'on':'')+'" onclick="setKd(false)">Semua</button><button class="chip xs '+(S.kd?'on':'')+'" onclick="setKd(true)">Belum diputuskan ('+undecN+')</button></div>';
+  if(!ln)h+='<div class="empty">'+(S.kd?'Semua creative yang sudah tayang sudah diputuskan.':'Belum ada tayang'+(S.af?' untuk '+esc(S.af):'')+'.')+'</div>';
+  h+=advList(live.filter(function(c){return !S.kd||(firstStart(c)&&!kepOf(c.id));}),function(c){
+    var x='<div class="item"><div class="kr-t">'+esc(c.nama)+'</div><div class="tags">'+divTag(c)+kampTags(c)+'<span class="tag na">'+esc(c.kategori||'Belum dikategorikan')+'</span>'+kepTag(c)+'</div>'+kepBox(c);
     tayOf(c.id).forEach(function(t){x+=tayRow(c,t);});
-    if(can('adv'))x+='<div class="acts"><button class="btn s ghost" onclick="newTayang(\''+c.id+'\')">+ Tayang baru</button><button class="btn s danger" onclick="killCr(\''+c.id+'\')">KILL</button></div>'+edBoxFor(c.id,'');
+    if(can('adv'))x+='<div class="acts">'+(firstStart(c)?'<button class="btn s win" onclick="kepOpen(\''+c.id+'\',\'WINNER\')">WINNER — Replikasi</button><button class="btn s ghost" onclick="kepOpen(\''+c.id+'\',\'LANJUT\')">LANJUT — Masih diuji</button>':'')+'<button class="btn s ghost" onclick="newTayang(\''+c.id+'\')">+ Tayang baru</button><button class="btn s danger" onclick="killCr(\''+c.id+'\')">KILL — Hentikan</button></div>'+edBoxFor(c.id,'');
     return x+'</div>';
   });
   h+='</div></div>';
   return h+killCard(dead);
+}
+function kepBox(c){
+  var k=kepOf(c.id);if(!k||isOff(c))return '';
+  var who='<div class="sm" style="opacity:.8">Oleh '+esc(k.by)+' · '+dLabel((k.ts||'').slice(0,10))+'</div>';
+  if(k.status==='WINNER'){var n=nTurunan(c.id);return '<div class="kepbox win"><b>WINNER</b>'+(k.catatan?' · '+esc(k.catatan):'')+'<div class="sm">'+(n?n+' creative turunan sudah dibuat':'Belum ada versi turunan')+'</div>'+who+'</div>';}
+  return '<div class="kepbox"><b>LANJUT</b> · masih diuji'+(k.catatan?' · '+esc(k.catatan):'')+who+'</div>';
+}
+function kepOpen(cid,st){
+  var k=kepOf(cid);
+  edOpen({type:'kep',cid:cid,id:'',status:st,catatan:k&&k.status===st?(k.catatan||''):''});
+}
+function kepPick(st){edSync();S.ed.status=st;render();var e=$('edbox');if(e)e.scrollIntoView({block:'center'});}
+function kepSave(){
+  edSync();var e=S.ed,c=creativeOf(e.cid);if(!c)return;
+  var cat=String(e.catatan||'').trim();
+  if(e.status==='WINNER'&&!cat){toast('Alasan Winner wajib diisi (mis. CPL murah, CTR tinggi)',true);return;}
+  var k=kepOf(c.id);
+  if(k&&k.status==='WINNER'&&e.status!=='WINNER'&&nTurunan(c.id)&&!confirm('Winner ini sudah punya '+nTurunan(c.id)+' creative turunan. Tetap batalkan status Winner?'))return;
+  $('ed_save').disabled=true;
+  saveAndReload({action:'keputusan',cid:c.id,status:e.status,catatan:cat},e.status==='WINNER'?'Ditetapkan sebagai Winner':'Ditandai LANJUT (masih diuji)').then(function(ok){if(ok){S.ed=null;render();}else{var b=$('ed_save');if(b)b.disabled=false;}});
 }
 function tayRow(c,t){
   var st=tStatus(t),stT=st==='Berjalan'?'ok':st==='Selesai'?'brand':'warn';
@@ -640,6 +782,15 @@ function edBoxFor(cid,tid){
       '<div class="sm mut" style="margin-top:8px">Isi <b>total sejak mulai tayang</b>, bukan per hari. Di Meta, atur rentang tanggal sama dengan periode tayang ini.</div>'+
       '<label class="lbl">CTR (%) dari kolom CTR di Meta, boleh dikosongkan</label><input class="inp" type="number" inputmode="decimal" min="0" max="100" step="0.01" id="ed_ctr" value="'+esc(e.ctr||'')+'" placeholder="mis. 1,25">'+
       '<button class="btn" id="ed_save" onclick="saveHasil()">Simpan Hasil</button><button class="btn ghost" onclick="edClose()">Batal</button></div>';
+  }
+  if(e.type==='kep'){
+    var kc=creativeOf(e.cid),hs=kc?hasilStr(kc.id,''):'',cx=kc?ctrOf(kc.id,''):null,win=e.status==='WINNER';
+    return '<div class="fbox" id="edbox"><div class="h">Keputusan · '+esc(kc?kc.nama:'')+'</div>'+
+      '<div class="sm" style="margin-bottom:10px">'+(hs?'Hasil: '+hs:'<span style="color:var(--warn)">Hasil belum diisi</span>')+(cx!=null?' · CTR <b>'+ctrFmt(cx)+'</b>':'')+'</div>'+
+      '<div class="chips" style="margin-bottom:0"><button class="chip '+(win?'on':'')+'" onclick="kepPick(\'WINNER\')">WINNER — Replikasi</button><button class="chip '+(!win?'on':'')+'" onclick="kepPick(\'LANJUT\')">LANJUT — Masih diuji</button></div>'+
+      '<label class="lbl">'+(win?'Alasan Winner *':'Catatan (opsional)')+'</label><textarea class="ta" id="ed_cat" maxlength="200" placeholder="'+(win?'mis. CPL Rp 9.800, CTR 1,6%, layak dibuat versi lain':'mis. baru 3 hari tayang, tunggu data')+'">'+esc(e.catatan||'')+'</textarea>'+
+      '<div class="sm mut" style="margin-top:8px">'+(win?'Winner = creative yang hasilnya cukup baik dan layak dibuat versi turunannya. Brand Creator akan melihatnya di daftar "Winner menunggu direplikasi". Ranking #1 tidak otomatis Winner.':'LANJUT = creative masih diuji, belum layak jadi Winner dan belum perlu dihentikan.')+'</div>'+
+      '<button class="btn'+(win?' win':'')+'" id="ed_save" onclick="kepSave()">'+(win?'Tetapkan Winner':'Simpan LANJUT')+'</button><button class="btn ghost" onclick="edClose()">Batal</button></div>';
   }
   if(e.type==='kill')return '<div class="fbox" id="edbox"><div class="h">KILL · '+esc(e.label)+'</div><label class="lbl">Alasan *</label><div class="chips" style="margin-bottom:0">'+
       ALASAN.map(function(a,i){return '<button class="chip '+(e.alasan===a?'on':'')+'" onclick="killPick('+i+')">'+esc(a)+'</button>';}).join('')+'</div>'+
@@ -695,8 +846,8 @@ function hasKamp(k){return k!=='Awareness Offline';}   // target kampanye hanya 
 function tgtKamp(m,k,d){var r=D.targets.filter(function(x){return x.bulan===m&&x.kategori===k&&x.divisi===d;})[0];return r&&r.kampanye!=null?r.kampanye:null;}
 // jumlah kampanye yang sudah ada = nama kampanye berbeda pada creative yang dicatat di bulan itu (per kategori & divisi)
 function kampMade(m,k,d){var seen={},n=0;inMonth(m).forEach(function(c){if(c.kategori!==k||c.divisi!==d)return;var key=kampKey(c.kampanye);if(key&&!seen[key]){seen[key]=1;n++;}});return n;}
-function mgInit(m){var v={};KATS.forEach(function(k,i){DIVISI.forEach(function(d,j){var t=tgtOf(m,k,d);v[i+'_'+j]=t==null?'':String(t);if(hasKamp(k)){var kt=tgtKamp(m,k,d);v['k'+i+'_'+j]=kt==null?'':String(kt);}});});S.mt={bulan:m,vals:v};}
-function mgSync(){if(!S.mt)return;KATS.forEach(function(k,i){DIVISI.forEach(function(d,j){var e=$('mg_'+i+'_'+j);if(e)S.mt.vals[i+'_'+j]=e.value;var f=$('mg_k'+i+'_'+j);if(f)S.mt.vals['k'+i+'_'+j]=f.value;});});}
+function mgInit(m){var v={w:(tgtW(m)==null?'':String(tgtW(m)))};KATS.forEach(function(k,i){DIVISI.forEach(function(d,j){var t=tgtOf(m,k,d);v[i+'_'+j]=t==null?'':String(t);if(hasKamp(k)){var kt=tgtKamp(m,k,d);v['k'+i+'_'+j]=kt==null?'':String(kt);}});});S.mt={bulan:m,vals:v};}
+function mgSync(){if(!S.mt)return;var wi=$('mg_w');if(wi)S.mt.vals.w=wi.value;KATS.forEach(function(k,i){DIVISI.forEach(function(d,j){var e=$('mg_'+i+'_'+j);if(e)S.mt.vals[i+'_'+j]=e.value;var f=$('mg_k'+i+'_'+j);if(f)S.mt.vals['k'+i+'_'+j]=f.value;});});}
 function mgCalc(){mgSync();var g=0,gk=0;KATS.forEach(function(k,i){var s=0,sk=0;DIVISI.forEach(function(d,j){s+=+S.mt.vals[i+'_'+j]||0;if(hasKamp(k))sk+=+S.mt.vals['k'+i+'_'+j]||0;});g+=s;gk+=sk;var e=$('mg_t'+i);if(e)e.textContent=n0(s);var f=$('mg_kt'+i);if(f)f.textContent=n0(sk);});var e=$('mg_g');if(e)e.textContent=n0(g);var f=$('mg_kg');if(f)f.textContent=n0(gk);}
 function mgPick(m){mgInit(m);render();}
 function mgSave(){
@@ -712,8 +863,10 @@ function mgSave(){
     }
     items.push(it);
   }
+  var wv=String(S.mt.vals.w==null?'':S.mt.vals.w).trim();
+  if(wv!==''&&!/^\d{1,4}$/.test(wv)){toast('Target Winner harus bilangan bulat 0 sampai 9999',true);return;}
   $('mg_save').disabled=true;
-  saveAndReload({action:'target',bulan:S.mt.bulan,items:items},'Target tersimpan').then(function(ok){if(ok){mgInit(S.mt.bulan);render();}else{var b=$('mg_save');if(b)b.disabled=false;}});
+  saveAndReload({action:'target',bulan:S.mt.bulan,items:items,winner:wv},'Target tersimpan').then(function(ok){if(ok){mgInit(S.mt.bulan);render();}else{var b=$('mg_save');if(b)b.disabled=false;}});
 }
 function mgSec(label,totId,sum,first){return '<div class="row" style="align-items:flex-end;'+(first?'margin-top:12px':'margin-top:16px;padding-top:14px;border-top:1px solid var(--bdr)')+'"><div class="h" style="margin:0;flex:1">'+label+'</div><div style="text-align:right"><span class="sm mut">Total</span> <b id="'+totId+'" style="font-size:22px;line-height:1;color:var(--m-d)">'+n0(sum)+'</b></div></div>';}
 function mgCell(ed,d,id,v,made,madeLbl){
@@ -744,6 +897,10 @@ function vMgr(){
       (hasKamp(k)?mgSec('Jumlah kampanye','mg_kt'+i,sumK,false)+'<div class="grid2" style="margin-top:12px">'+kcells+'</div>':'')+'</div>';
   }).join('')+'</div>';
   h+='<div class="sm mut" style="margin:10px 2px 0">“Sudah ada” untuk kampanye = jumlah nama kampanye berbeda pada creative yang dicatat bulan ini, per kategori dan divisi. Kolom target kampanye yang dikosongkan berarti belum ditetapkan.</div>';
+  var ws=bcStats(m),wv=S.mt.vals.w;
+  h+='<div class="card fw" style="margin-top:14px"><div class="kr-t" style="font-size:15px">Target Winner '+esc(monLabel(m))+'</div><div class="sm mut" style="margin:4px 0 10px">Jumlah creative yang diharapkan ditetapkan Winner oleh Advertiser bulan ini. Dipakai untuk status performa Brand Creator di Dashboard. Kosong = belum ditetapkan.</div>'+
+    (ed?'<input class="inp" type="number" inputmode="numeric" min="0" max="9999" step="1" id="mg_w" value="'+esc(wv)+'" placeholder="mis. 6" style="max-width:160px">':'<div class="bigh'+(wv===''?' na':'')+'" style="font-size:34px">'+(wv===''?'—':n0(+wv))+'</div>')+
+    '<div class="sm mut" style="margin-top:6px">Winner bulan ini: <b>'+ws.win.length+'</b> dari '+ws.tested.length+' creative yang diuji</div></div>';
   h+='<div class="card fw" style="margin-top:14px"><div class="row"><div class="kr-t" style="font-size:15px">Total target creative '+esc(monLabel(m))+'</div><b class="sp" id="mg_g" style="font-size:30px;line-height:1;color:var(--m-d)">'+n0(g)+'</b></div>'+
     '<div class="row" style="margin-top:8px"><div class="kr-t" style="font-size:15px">Total target kampanye '+esc(monLabel(m))+'</div><b class="sp" id="mg_kg" style="font-size:30px;line-height:1;color:var(--m-d)">'+n0(gk)+'</b></div>'+
     (ed?'<button class="btn" id="mg_save" onclick="mgSave()">Simpan target</button>':'')+'</div>';
