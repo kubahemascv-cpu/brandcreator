@@ -197,7 +197,7 @@ function isOff(c){return c.kategori==='Awareness Offline';}   // creative offlin
 var MONTH_ID=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 
 // ═════════════ UTIL ═════════════
-var S={ok:true,who:'',tab:'dash',loaded:false,err:'',kf:'',cdv:'',af:'',kd:false,wk:'',wd:'',wo:'',sort:{},mt:null,cf:null,ed:null};
+var S={ok:true,who:'',tab:'dash',loaded:false,err:'',kf:'',cdv:'',af:'',kd:false,ak:'',wk:'',wd:'',wo:'',sort:{},mt:null,cf:null,ed:null};
 var D={creatives:[],tayang:[],targets:[],kills:[],keputusan:[],today:'',month:''};
 function $(id){return document.getElementById(id);}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
@@ -529,6 +529,8 @@ function vDash(){
 function setKf(v){S.kf=v;render();}
 function setCdv(v){S.cdv=v;render();}
 function setAf(v){S.af=v;render();}
+function setAk(i){S.ak=i<0?'':AKL[i];render();}
+var AKL=[];
 function setKd(v){S.kd=v;render();}
 function vCreative(){
   var h='<div class="row" style="margin-bottom:12px"><div class="mid">Creative</div>'+(can('creator')&&!S.cf?'<button class="btn s sp" onclick="cfOpen(\'\')">+ Input creative</button>':'')+'</div>';
@@ -650,14 +652,15 @@ function reviveKamp(i){var k=KK[i];if(k===undefined)return;if(!confirm('Hidupkan
 function reviveCr(id){var c=creativeOf(id);if(!c)return;if(!confirm('Hidupkan lagi creative "'+c.nama+'"? Tayang yang sudah dihentikan tidak menyala otomatis.'))return;saveAndReload({action:'revive',tipe:'creative',target:id},'Creative dihidupkan lagi');}
 function divTag(c){return c.divisi?'<span class="tag dv">'+esc(c.divisi)+'</span>':'<span class="tag warn">Belum ada divisi</span>';}
 // daftar creative dikelompokkan per divisi (kalau filter divisi aktif: satu kelompok saja, tanpa judul)
+function advPass(c){return (!S.af||c.divisi===S.af)&&(!S.ak||inKamp(c,kampKey(S.ak)));}
+function primKamp(c){var ts=tayOf(c.id);return ts.length?tKamp(ts[0]):c.kampanye;}   // kampanye tayang terbaru; antrean = kampanye asal
+// dikelompokkan per kampanye. Satu creative muncul sekali (di kampanye tayang terbarunya); kalau satu kampanye dipilih, semuanya masuk kampanye itu
 function advList(list,fn){
-  if(S.af)return list.filter(function(c){return c.divisi===S.af;}).map(fn).join('');
-  var h='';
-  DIVISI.concat(['']).forEach(function(d){
-    var l=list.filter(function(c){return (c.divisi||'')===d;});if(!l.length)return;
-    h+='<div class="dvh">'+esc(d||'Belum diberi divisi')+' · '+l.length+'</div>'+l.map(fn).join('');
-  });
-  return h;
+  var g={},order=[];
+  list.filter(advPass).forEach(function(c){var k=S.ak||primKamp(c),kk=kampKey(k);if(!g[kk]){g[kk]={name:k,items:[]};order.push(kk);}g[kk].items.push(c);});
+  var rank=kampanyeList().map(kampKey);
+  order.sort(function(a,b){return (rank.indexOf(a)<0?999:rank.indexOf(a))-(rank.indexOf(b)<0?999:rank.indexOf(b));});
+  return order.map(function(kk){var x=g[kk];return (S.ak?'':'<div class="dvh">'+esc(x.name||'Tanpa kampanye')+' · '+x.items.length+'</div>')+x.items.map(fn).join('');}).join('');
 }
 function lastKamp(cid){var ts=tayOf(cid);if(ts.length)return tKamp(ts[0]);var c=creativeOf(cid);return c?c.kampanye:'';}
 function newTayang(cid){edOpen({type:'tayang',cid:cid,id:'',mulai:TD(),selesai:'',kamp:lastKamp(cid),knew:''});}
@@ -668,14 +671,17 @@ function vAdv(){
   if(!can('adv'))h+=note('Tab ini untuk Advertiser (Lukman). Anda bisa melihat, tidak bisa mengubah.');
   var all=D.creatives.filter(function(c){return !isOff(c)&&!killOf(c);}),dead=D.creatives.filter(function(c){return !isOff(c)&&killOf(c);});
   h+=kampCard();
+  var aks=kampanyeList().filter(function(k){return all.some(function(c){return inKamp(c,kampKey(k));});});AKL=aks;
+  if(S.ak&&aks.indexOf(S.ak)<0)S.ak='';
+  if(aks.length>1)h+='<div class="chips"><button class="chip '+(!S.ak?'on':'')+'" onclick="setAk(-1)">Semua kampanye ('+all.length+')</button>'+aks.map(function(k,i){return '<button class="chip '+(S.ak===k?'on':'')+'" onclick="setAk('+i+')">'+esc(k)+' ('+all.filter(function(c){return inKamp(c,kampKey(k));}).length+')</button>';}).join('')+'</div>';
   h+='<div class="chips"><button class="chip '+(!S.af?'on':'')+'" onclick="setAf(\'\')">Semua divisi ('+all.length+')</button>'+DIVISI.map(function(d,i){return '<button class="chip '+(S.af===d?'on':'')+'" onclick="setAf(DIVISI['+i+'])">'+esc(d)+' ('+all.filter(function(c){return c.divisi===d;}).length+')</button>';}).join('')+'</div>';
   var queue=all.filter(function(c){return !tayOf(c.id).length;}).sort(function(a,b){return a.created<b.created?-1:1;});
   var live=all.filter(function(c){return tayOf(c.id).length;}).sort(function(a,b){return tayOf(b.id)[0].mulai<tayOf(a.id)[0].mulai?-1:1;});
-  var undecN=live.filter(function(c){return firstStart(c)&&!kepOf(c.id)&&(!S.af||c.divisi===S.af);}).length;
-  var qn=queue.filter(function(c){return !S.af||c.divisi===S.af;}).length,ln=live.filter(function(c){return (!S.af||c.divisi===S.af)&&(!S.kd||(firstStart(c)&&!kepOf(c.id)));}).length;
+  var undecN=live.filter(function(c){return firstStart(c)&&!kepOf(c.id)&&advPass(c);}).length;
+  var qn=queue.filter(advPass).length,ln=live.filter(function(c){return advPass(c)&&(!S.kd||(firstStart(c)&&!kepOf(c.id)));}).length;
   h+='<div class="advgrid">';
   h+='<div class="card a-que"><div class="h">Antrean · belum tayang ('+qn+')</div>';
-  if(!qn)h+='<div class="empty">Tidak ada antrean'+(S.af?' untuk '+esc(S.af):'. Semua creative sudah punya jadwal tayang')+'.</div>';
+  if(!qn)h+='<div class="empty">Tidak ada antrean'+(S.ak||S.af?' untuk '+esc(S.ak||S.af):'. Semua creative sudah punya jadwal tayang')+'.</div>';
   h+=advList(queue,function(c){
     var age=dDiff((c.created||TD()).slice(0,10),TD());
     return '<div class="item"><div class="kr-t">'+esc(c.nama)+'</div><div class="tags">'+divTag(c)+kampTags(c)+'<span class="tag na">'+esc(c.kategori||'Belum dikategorikan')+'</span></div><div class="sm mut">Masuk '+(age<=0?'hari ini':age+' hari lalu')+' · oleh '+esc(c.by)+'</div>'+
@@ -684,7 +690,7 @@ function vAdv(){
   h+='</div>';
   h+='<div class="card a-tay"><div class="h">Tayang & Hasil ('+ln+' creative)</div>'+
     '<div class="chips" style="margin-bottom:6px"><button class="chip xs '+(!S.kd?'on':'')+'" onclick="setKd(false)">Semua</button><button class="chip xs '+(S.kd?'on':'')+'" onclick="setKd(true)">Belum diputuskan ('+undecN+')</button></div>';
-  if(!ln)h+='<div class="empty">'+(S.kd?'Semua creative yang sudah tayang sudah diputuskan.':'Belum ada tayang'+(S.af?' untuk '+esc(S.af):'')+'.')+'</div>';
+  if(!ln)h+='<div class="empty">'+(S.kd?'Semua creative yang sudah tayang sudah diputuskan.':'Belum ada tayang'+(S.ak||S.af?' untuk '+esc(S.ak||S.af):'')+'.')+'</div>';
   h+=advList(live.filter(function(c){return !S.kd||(firstStart(c)&&!kepOf(c.id));}),function(c){
     var x='<div class="item"><div class="kr-t">'+esc(c.nama)+'</div><div class="tags">'+divTag(c)+kampTags(c)+'<span class="tag na">'+esc(c.kategori||'Belum dikategorikan')+'</span>'+kepTag(c)+'</div>'+kepBox(c);
     tayOf(c.id).forEach(function(t){x+=tayRow(c,t);});
@@ -769,7 +775,7 @@ function tayRow(c,t){
   if(st!=='Terjadwal')hs+=t.cpm!=null?'<div class="ctrl">CPM <b>Rp'+n0(t.cpm)+'</b>'+(t.ctr!=null?' <span style="color:var('+(tayLolos(t)?'--ok':'--warn')+')">'+(tayLolos(t)?'✓ lolos kriteria':'· di luar kriteria')+'</span>':'')+'</div>':'<div class="ctrl" style="color:var(--warn)">CPM belum diisi</div>';
   var acts='';
   if(can('adv')){
-    acts='<div class="acts">'+(st==='Terjadwal'?'':'<button class="btn s" onclick="hasilOpen(\''+t.id+'\')">'+(t.hasil==null?'Isi Hasil & CTR':'Ubah Hasil & CTR')+'</button>')+
+    acts='<div class="acts">'+(st==='Terjadwal'?'':'<button class="btn s" onclick="hasilOpen(\''+t.id+'\')">'+(t.hasil==null?'Isi Hasil, CTR & CPM':'Ubah Hasil, CTR & CPM')+'</button>')+
       '<button class="btn s ghost" onclick="ubahTayang(\''+t.id+'\')">Ubah periode</button>'+
       (st==='Berjalan'&&!t.selesai?'<button class="btn s ghost" onclick="tStop(\''+t.id+'\')">Hentikan hari ini</button>':'')+
       '<button class="btn s danger" onclick="tDel(\''+t.id+'\')">Hapus</button></div>';
