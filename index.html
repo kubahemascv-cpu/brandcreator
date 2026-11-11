@@ -414,6 +414,48 @@ function vKpi(m){
   return h;
 }
 
+// ═════════════ KAMPANYE BULAN INI ═════════════
+// kampanye "bulan ini" = kampanye yang punya tayang (creative online) yang bersinggungan dengan bulan itu.
+// status: KILL (kampanye di-KILL) > Berjalan (ada tayang berjalan hari ini) > Terjadwal (belum ada yang berjalan, ada yang akan mulai bulan ini) > Selesai.
+// "Belum tayang" = kampanye dengan creative yang dicatat bulan ini tapi belum punya tayang sama sekali (di luar hitungan utama).
+function kampBulan(m){
+  var ms=m+'-01',me=m+'-31',map={};
+  D.tayang.forEach(function(t){
+    var c=creativeOf(t.cid);if(!c||isOff(c))return;
+    if(t.mulai>me||(t.selesai&&t.selesai<ms))return;
+    var nm=tKamp(t),k=kampKey(nm),g=map[k]||(map[k]={name:nm,key:k,run:0,sch:0,done:0,cr:{},first:t.mulai,last:'',open:false});
+    var st=tStatus(t);if(st==='Berjalan')g.run++;else if(st==='Terjadwal')g.sch++;else g.done++;
+    g.cr[t.cid]=1;if(t.mulai<g.first)g.first=t.mulai;
+    if(!t.selesai)g.open=true;else if(t.selesai>g.last)g.last=t.selesai;
+  });
+  var list=Object.keys(map).map(function(k){var g=map[k],kl=killRec('kampanye',k);g.n=Object.keys(g.cr).length;g.kill=kl;g.st=kl?'KILL':g.run?'Berjalan':g.sch?'Terjadwal':'Selesai';return g;});
+  var ord={Berjalan:0,Terjadwal:1,Selesai:2,KILL:3};
+  list.sort(function(a,b){return ord[a.st]-ord[b.st]||(a.name<b.name?-1:1);});
+  var pend={};
+  inMonth(m).forEach(function(c){if(isOff(c)||tayOf(c.id).length)return;var k=kampKey(c.kampanye);if(!map[k]&&!killRec('kampanye',k)){pend[k]=pend[k]||{name:c.kampanye,n:0};pend[k].n++;}});
+  var cnt={Berjalan:0,Terjadwal:0,Selesai:0,KILL:0};list.forEach(function(g){cnt[g.st]++;});
+  return {list:list,cnt:cnt,pend:Object.keys(pend).map(function(k){return pend[k];})};
+}
+function vKampBulan(m){
+  var kb=kampBulan(m),hasilBy={};
+  campData().forEach(function(c){hasilBy[kampKey(c.name)]=c.garr.map(function(g){return '<b>'+n0(g.total)+'</b> '+esc(g.label);}).join(' · ');});
+  var tg=kb.list.length;
+  var h='<div class="card"><div class="h">Kampanye bulan ini · '+esc(monLabel(m))+'</div>'+
+    '<div class="row" style="align-items:flex-end;gap:14px"><div><div class="heroNum" style="color:var(--m-d);font-size:44px;line-height:1">'+kb.cnt.Berjalan+'</div><div class="sm" style="font-weight:700;margin-top:4px">kampanye berjalan</div></div>'+
+    '<div class="sm mut" style="flex:1;padding-bottom:4px">dari '+tg+' kampanye yang tayang bulan ini</div></div>'+
+    '<div class="tags" style="margin-top:10px"><span class="tag ok">Berjalan '+kb.cnt.Berjalan+'</span><span class="tag warn">Terjadwal '+kb.cnt.Terjadwal+'</span><span class="tag brand">Selesai '+kb.cnt.Selesai+'</span><span class="tag bad">KILL '+kb.cnt.KILL+'</span>'+(kb.pend.length?'<span class="tag na">Belum tayang '+kb.pend.length+'</span>':'')+'</div>';
+  if(!tg)h+='<div class="empty">Belum ada kampanye yang tayang bulan ini.</div>';
+  kb.list.forEach(function(g){
+    var tt=g.st==='Berjalan'?'ok':g.st==='Terjadwal'?'warn':g.st==='KILL'?'bad':'brand';
+    h+='<div class="item"><div class="row"><div class="kr-t">'+esc(g.name)+'</div><span class="tag '+tt+' sp">'+g.st+'</span></div>'+
+      '<div class="sm mut" style="margin-top:3px">'+g.n+' creative'+(g.run?' · '+g.run+' tayang berjalan':'')+' · '+dLabel(g.first)+' → '+(g.open?'sekarang':dLabel(g.last))+'</div>'+
+      (hasilBy[g.key]?'<div class="sm" style="margin-top:3px">Hasil '+hasilBy[g.key]+'</div>':'')+
+      (g.kill?'<div class="sm" style="margin-top:3px;color:var(--bad)">KILL: '+esc(g.kill.alasan)+'</div>':'')+'</div>';
+  });
+  if(kb.pend.length)h+='<div class="sm mut" style="margin-top:10px">Belum tayang (creative sudah masuk, belum diatur tayangnya): '+kb.pend.map(function(x){return esc(x.name)+' ('+x.n+')';}).join(', ')+'</div>';
+  return h+'</div>';
+}
+
 // ═════════════ SHELL ═════════════
 function pickWho(){
   document.body.classList.remove('shell');$('top').style.display='none';$('nav').style.display='none';
@@ -484,7 +526,7 @@ function vDash(){
     });
   }
   tg+='</div>';
-  h+=vKpi(m)+'<div class="gridc">'+hero+tg+'</div>';
+  h+=vKpi(m)+vKampBulan(m)+'<div class="gridc">'+hero+tg+'</div>';
   if(tl.nodiv)h+=note(tl.nodiv+' creative lama belum punya divisi. Buka tab Creative → Ubah, lalu pilih divisinya supaya masuk hitungan per divisi.','warn');
   var cd=campData();
   if(!D.creatives.length)return h+note('Belum ada creative. Brand Creator mengisi di tab Creative.');
